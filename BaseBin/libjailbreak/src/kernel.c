@@ -92,9 +92,6 @@ int proc_csflags_patch(int pid)
     uint64_t proc = proc_find(pid);
     if(proc) {
         proc_csflags_set(proc, CS_GET_TASK_ALLOW);
-
-        // auto enable jit (suspend spawn)
-        cs_allow_invalid(proc, false);
     } else {
         ret = -1;
     }

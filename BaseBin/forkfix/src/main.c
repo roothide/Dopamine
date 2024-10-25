@@ -94,7 +94,7 @@ __attribute__((visibility ("default"))) pid_t forkfix___fork(void)
 
 __attribute__((constructor)) static void initializer(void)
 {
-	void *systemhookHandle = dlopen("systemhook.dylib", RTLD_NOLOAD);
+	void *systemhookHandle = dlopen("systemhook.dylib", RTLD_NOLOAD); // find systemhook using <install-name>
 	if (systemhookHandle) {
 		kern_return_t (*litehook_hook_function)(void *source, void *target) = dlsym(systemhookHandle, "litehook_hook_function");
 		if (litehook_hook_function) {

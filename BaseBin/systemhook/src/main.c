@@ -281,13 +281,12 @@ int posix_spawn_hook_roothide(pid_t *restrict pidp, const char *restrict path, s
 								int (*set_process_debugged)(uint64_t pid, bool fullyDebugged), 
 								double jetsamMultiplier)
 {
-	struct _posix_spawn_args_desc __desc = {0};
-	if(!desc) desc = &__desc;
-
-	posix_spawnattr_t attr = NULL;
-	if (!desc->attrp) {
+	if(!desc || !desc->attrp) {
+		posix_spawnattr_t attr=NULL;
 		posix_spawnattr_init(&attr);
-		desc->attrp = attr;
+		int ret = posix_spawn(pidp, path, (desc && desc->file_actions) ? &desc->file_actions : NULL, &attr, argv, envp);
+		posix_spawnattr_destroy(&attr);
+		return ret;
 	}
 	posix_spawnattr_t attrp = &desc->attrp;
 
@@ -307,11 +306,10 @@ int posix_spawn_hook_roothide(pid_t *restrict pidp, const char *restrict path, s
 	}
 
 	if (patch_exec) {
-		if (jbclient_patch_exec_add(path, should_resume) != 0) { // jdb fault? restore
+		if (jbclient_patch_exec_add(path, should_resume) != 0) { // jdb fault?
+			//restore flags
 			posix_spawnattr_setflags(attrp, flags);
-			should_suspend = false;
-			should_resume = false;
-			patch_exec = false;
+			return 99;
 		}
 	}
 
@@ -319,7 +317,8 @@ int posix_spawn_hook_roothide(pid_t *restrict pidp, const char *restrict path, s
 	int ret = posix_spawn_hook_shared(&pid, path, desc, argv, envp, orig, trust_binary, set_process_debugged, jetsamMultiplier);
 	if (pidp) *pidp = pid;
 
-	posix_spawnattr_setflags(attrp, flags); // maybe caller will use it again?
+	// maybe caller will use it again? restore flags
+	posix_spawnattr_setflags(attrp, flags);
 
 	if (patch_exec) { //exec failed?
 		jbclient_patch_exec_del(path);
@@ -327,16 +326,12 @@ int posix_spawn_hook_roothide(pid_t *restrict pidp, const char *restrict path, s
 		if(set_debugged) {
 			set_process_debugged(pid, false);
 		}
-		if (should_suspend && jbclient_patch_spawn(pid, should_resume) != 0) { // jdb fault? let it go
-			if (should_resume) {
-				kill(pid, SIGCONT);
-			} 
+		if (should_suspend) {
+			if(jbclient_patch_spawn(pid, should_resume) != 0) { // jdb fault? kill
+				kill(pid, SIGKILL);
+				return 98;
+			}
 		}
-	}
-
-	if (attr) {
-		posix_spawnattr_destroy(&attr);
-		desc->attrp = NULL;
 	}
 
 	return ret;
@@ -538,7 +533,7 @@ __attribute__((constructor)) static void initializer(void)
 
 	redirectDirs(JB_RootPath);
 	
-	litehook_hook_function((void *)&issetugid, (void *)&new_issetugidhook);
+	// litehook_hook_function((void *)&issetugid, (void *)&new_issetugidhook);
 //////////////////////////////////////////////////////////////////////////
 
 	// Apply sandbox extensions

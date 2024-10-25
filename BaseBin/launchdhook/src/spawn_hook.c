@@ -177,52 +177,59 @@ int __posix_spawn_orig_wrapper(pid_t *restrict pidp, const char *restrict path, 
 
 int __posix_spawn_hook(pid_t *restrict pidp, const char *restrict path, struct _posix_spawn_args_desc *desc, char *const argv[restrict], char *const envp[restrict])
 {
-    struct _posix_spawn_args_desc __desc = {0};
-    if(!desc) desc = &__desc;
+	if(!desc || !desc->attrp) {
+		posix_spawnattr_t attr=NULL;
+		posix_spawnattr_init(&attr);
+		int ret = posix_spawn(pidp, path, (desc && desc->file_actions) ? &desc->file_actions : NULL, &attr, argv, envp);
+		posix_spawnattr_destroy(&attr);
+		return ret;
+	}
+	posix_spawnattr_t attrp = &desc->attrp;
 
-    if (path) {
-        char executablePath[1024];
-        uint32_t bufsize = sizeof(executablePath);
-        _NSGetExecutablePath(&executablePath[0], &bufsize);
-        if (!strcmp(path, executablePath)) {
-            // This spawn will perform a userspace reboot...
-            // Instead of the ordinary hook, we want to reinsert this dylib
-            // This has already been done in envp so we only need to call the original posix_spawn
+	if (path) {
+		char executablePath[1024];
+		uint32_t bufsize = sizeof(executablePath);
+		_NSGetExecutablePath(&executablePath[0], &bufsize);
+		if (!strcmp(path, executablePath)) {
+			// This spawn will perform a userspace reboot...
+			// Instead of the ordinary hook, we want to reinsert this dylib
+			// This has already been done in envp so we only need to call the original posix_spawn
 
-            JBLogDebug("==== USERSPACE REBOOT ====\n");
+			// We are back in "early boot" for the remainder of this launchd instance
+			// Mainly so we don't lock up while spawning boomerang
+			gInEarlyBoot = true;
 
-            // But before, we want to stash the primitives in boomerang
-            boomerang_stashPrimitives();
+#if LOG_PROCESS_LAUNCHES
+			FILE *f = fopen("/var/mobile/launch_log.txt", "a");
+			fprintf(f, "==== USERSPACE REBOOT ====\n");
+			fclose(f);
+#endif
 
-            // Fix Xcode debugging being broken after the userspace reboot
-            unmount("/Developer", MNT_FORCE);
+			// Before the userspace reboot, we want to stash the primitives into boomerang
+			boomerang_stashPrimitives();
 
-            // If there is a pending jailbreak update, apply it now
-            const char *stagedJailbreakUpdate = getenv("STAGED_JAILBREAK_UPDATE");
-            if (stagedJailbreakUpdate) {
-                int r = jbupdate_basebin(stagedJailbreakUpdate);
-                unsetenv("STAGED_JAILBREAK_UPDATE");
-            }
+			// Fix Xcode debugging being broken after the userspace reboot
+			unmount("/Developer", MNT_FORCE);
 
-            posix_spawnattr_t attr = NULL;
-            if (!desc->attrp) {
-                posix_spawnattr_init(&attr);
-                desc->attrp = attr;
-            }
-            posix_spawnattr_t attrp = &desc->attrp;
+			// If there is a pending jailbreak update, apply it now
+			const char *stagedJailbreakUpdate = getenv("STAGED_JAILBREAK_UPDATE");
+			if (stagedJailbreakUpdate) {
+				int r = jbupdate_basebin(stagedJailbreakUpdate);
+				unsetenv("STAGED_JAILBREAK_UPDATE");
+			}
 
             // Suspend launchd and patch GET_TASK_ALLOW in boomerang
             short flags = 0;
             posix_spawnattr_getflags(attrp, &flags);
             posix_spawnattr_setflags(attrp, flags | POSIX_SPAWN_START_SUSPENDED);
 
-            // Always use environ instead of envp, as boomerang_stashPrimitives calls setenv
-            // setenv / unsetenv can sometimes cause environ to get reallocated
-            // In that case envp may point to garbage or be empty
-            // Say goodbye to this process
-            return __posix_spawn_orig_wrapper(pidp, path, desc, argv, envp);
-        }
-    }
+			// Always use environ instead of envp, as boomerang_stashPrimitives calls setenv
+			// setenv / unsetenv can sometimes cause environ to get reallocated
+			// In that case envp may point to garbage or be empty
+			// Say goodbye to this process
+			return __posix_spawn_orig_wrapper(pidp, path, desc, argv, environ);
+		}
+	}
 
 	// We can't support injection into processes that get spawned before the launchd XPC server is up
 	// (Technically we could but there is little reason to, since it requires additional work)
@@ -252,13 +259,6 @@ int __posix_spawn_hook(pid_t *restrict pidp, const char *restrict path, struct _
 
         return ret;
     }
-
-    posix_spawnattr_t attr = NULL;
-    if (!desc->attrp) {
-        posix_spawnattr_init(&attr);
-		desc->attrp = attr;
-    }
-    posix_spawnattr_t attrp = &desc->attrp;
 
     short flags = 0;
     posix_spawnattr_getflags(attrp, &flags);
@@ -296,11 +296,6 @@ int __posix_spawn_hook(pid_t *restrict pidp, const char *restrict path, struct _
         if (should_resume) {
             kill(pid, SIGCONT);
         }
-    }
-
-    if (attr) {
-        posix_spawnattr_destroy(&attr);
-        desc->attrp = NULL;
     }
 
     return ret;
