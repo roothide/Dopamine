@@ -1,6 +1,10 @@
 #import <Foundation/Foundation.h>
 #import <mach-o/dyld.h>
 
+#ifndef DEBUG
+#define NSLog(args...)	
+#endif
+
 NSString* safe_getExecutablePath()
 {
 	char executablePathC[PATH_MAX];

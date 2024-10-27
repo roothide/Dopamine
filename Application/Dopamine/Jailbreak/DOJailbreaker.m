@@ -524,6 +524,10 @@ int ensure_randomized_cdhash(const char* inputPath, void* cdhashOut);
 
 - (void)runWithError:(NSError **)errOut didRemoveJailbreak:(BOOL*)didRemove showLogs:(BOOL *)showLogs
 {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+    });
+    
     BOOL removeJailbreakEnabled = [[DOPreferenceManager sharedManager] boolPreferenceValueForKey:@"removeJailbreakEnabled" fallback:NO];
     BOOL tweaksEnabled = [[DOPreferenceManager sharedManager] boolPreferenceValueForKey:@"tweakInjectionEnabled" fallback:YES];
     BOOL idownloadEnabled = [[DOPreferenceManager sharedManager] boolPreferenceValueForKey:@"idownloadEnabled" fallback:NO];
@@ -590,6 +594,8 @@ int ensure_randomized_cdhash(const char* inputPath, void* cdhashOut);
     *errOut = [self injectLaunchdHook];
     if (*errOut) return;
     
+    // don't load tweak during jailbreaking
+    setenv("DISABLE_TWEAKS", "1", 1);
     // using the stock path during jailbreaking
     setenv("DYLD_INSERT_LIBRARIES", JBROOT_PATH("/basebin/systemhook.dylib"), 1);
     

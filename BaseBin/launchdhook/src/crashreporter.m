@@ -15,7 +15,6 @@
 #include <mach-o/dyld.h>
 extern CFStringRef CFCopySystemVersionString(void);
 
-void abort_with_reason(uint32_t reason_namespace, uint64_t reason_code, const char *reason_string, uint64_t reason_flags);
 #define RB_QUICK	0x400
 #define RB_PANIC	0x800
 int reboot_np(int howto, const char *message);
@@ -506,12 +505,12 @@ int sigcatch[] = {
 
 void crashreporter_start(void)
 {
-	// for(int i=0; i<sizeof(sigcatch)/sizeof(sigcatch[0]); i++) {
-	// 	struct sigaction act = {0};
-	// 	act.sa_flags = SA_SIGINFO|SA_RESETHAND;
-	// 	act.sa_sigaction = signal_handler;
-	// 	sigaction(sigcatch[i], &act, NULL);
-	// }
+	for(int i=0; i<sizeof(sigcatch)/sizeof(sigcatch[0]); i++) {
+		struct sigaction act = {0};
+		act.sa_flags = SA_SIGINFO|SA_RESETHAND;
+		act.sa_sigaction = signal_handler;
+		sigaction(sigcatch[i], &act, NULL);
+	}
 
 	if (gCrashReporterState == kCrashReporterStateNotActive) {
 		mach_port_allocate(mach_task_self_, MACH_PORT_RIGHT_RECEIVE, &gExceptionPort);

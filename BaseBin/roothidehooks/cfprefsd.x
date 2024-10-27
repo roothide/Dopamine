@@ -12,6 +12,13 @@ BOOL preferencePlistNeedsRedirection(NSString *plistPath)
 
 	NSString *plistName = plistPath.lastPathComponent;
 
+	NSArray* appleInternalBundleIds = @[
+		@"com.apple.Terminal.plist",
+	];
+
+	if ([appleInternalBundleIds containsObject:plistName])
+		return YES;
+
 	if ([plistName hasPrefix:@"com.apple."]
 	  || [plistName hasPrefix:@"group.com.apple."]
 	 || [plistName hasPrefix:@"systemgroup.com.apple."])
