@@ -436,11 +436,12 @@ bool _CFCanChangeEUIDs(void) {
 
 void loadPathHook()
 {
-	// we have to trust the lib manually before dyldhooks applied
-	jbclient_trust_library(JBROOT_PATH("/basebin/roothidehooks.dylib"), NULL);
-	void* roothidehooks = dlopen(JBROOT_PATH("/basebin/roothidehooks.dylib"), RTLD_NOW);
-	void (*pathhook)() = dlsym(roothidehooks, "pathhook");
-	pathhook();
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+		void* roothidehooks = dlopen(JBROOT_PATH("/basebin/roothidehooks.dylib"), RTLD_NOW);
+		void (*pathhook)() = dlsym(roothidehooks, "pathhook");
+		pathhook();
+	});
 }
 
 void redirect_path_env(const char* rootdir)
@@ -548,22 +549,18 @@ char HOOK_DYLIB_PATH[PATH_MAX] = {0};
 
 __attribute__((constructor)) static void initializer(void)
 {
+//////////////////////////////////////////////
+	struct dl_info di={0};
+	dladdr((void*)initializer, &di);
+	strncpy(HOOK_DYLIB_PATH, di.dli_fname, sizeof(HOOK_DYLIB_PATH));
+/////////////////////////////////////////////////////////////////////////
+
 	// Tell jbserver (in launchd) that this process exists
 	// This will disable page validation, which allows the rest of this constructor to apply hooks
 	if (jbclient_process_checkin(&JB_RootPath, &JB_BootUUID, &JB_SandboxExtensions, &gFullyDebugged) != 0) return;
 
 	// Apply sandbox extensions
 	apply_sandbox_extensions();
-
-//////////////////////////////////////////////////////////////////////////
-	struct dl_info di={0};
-	dladdr((void*)initializer, &di);
-	strncpy(HOOK_DYLIB_PATH, di.dli_fname, sizeof(HOOK_DYLIB_PATH));
-
-	redirect_paths(JB_RootPath);
-
-	dlopen(JBROOT_PATH("/usr/lib/roothideinit.dylib"), RTLD_NOW);
-//////////////////////////////////////////////////////////////////////////
 
 	// Unset DYLD_INSERT_LIBRARIES, but only if systemhook itself is the only thing contained in it
 	// Feeable attempt at making jailbreak detection harder
@@ -604,6 +601,15 @@ __attribute__((constructor)) static void initializer(void)
 		dyld_hook_routine(*gDyldPtr, 97, (void *)&dyld_dlopen_from_hook, (void **)&dyld_dlopen_from_orig, 0xD48C);
 		dyld_hook_routine(*gDyldPtr, 98, (void *)&dyld_dlopen_audited_hook, (void **)&dyld_dlopen_audited_orig, 0xD2A5);
 	}
+
+//////////////////////////////////////////////////////////////////////
+  /* after unsandboxing jbroot and applying dyldhooks */
+
+	redirect_paths(JB_RootPath);
+
+	dlopen(JBROOT_PATH("/usr/lib/roothideinit.dylib"), RTLD_NOW);
+	
+//////////////////////////////////////////////////////////////////////////
 
 #ifdef __arm64e__
 	// Since pages have been modified in this process, we need to load forkfix to ensure forking will work
