@@ -60,7 +60,6 @@ int exec_cmd_root(const char *binary, ...);
     retval; \
 })
 
-/*
 char *boot_manifest_hash(void);
 
 #define prebootUUIDPath(path) ({ \
@@ -70,7 +69,6 @@ char *boot_manifest_hash(void);
 	strlcat(outPath, path, PATH_MAX); \
 	(outPath); \
 })
-*/
 
 #define VM_FLAGS_GET_PROT(x)    ((x >>  7) & 0xFULL)
 #define VM_FLAGS_GET_MAXPROT(x) ((x >> 11) & 0xFULL);

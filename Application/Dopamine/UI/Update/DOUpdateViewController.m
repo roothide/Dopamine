@@ -186,7 +186,7 @@
         NSDictionary *release = (NSDictionary*)obj;
         NSString *name = release[@"name"];
         NSString *body = release[@"body"];
-        [changelogText appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"Version %@\n", name] attributes:@{NSFontAttributeName: [UIFont boldSystemFontOfSize:18], NSForegroundColorAttributeName : [UIColor whiteColor], NSParagraphStyleAttributeName:paragraphStyle}]];
+        [changelogText appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@\n", name] attributes:@{NSFontAttributeName: [UIFont boldSystemFontOfSize:18], NSForegroundColorAttributeName : [UIColor whiteColor], NSParagraphStyleAttributeName:paragraphStyle}]];
         [changelogText appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n"]];
         
         NSAttributedStringMarkdownParsingOptions *parsingOptions = [[NSAttributedStringMarkdownParsingOptions alloc] init];

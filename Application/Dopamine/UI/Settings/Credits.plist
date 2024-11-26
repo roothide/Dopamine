@@ -259,6 +259,12 @@
 				</dict>
 				<dict>
 					<key>name</key>
+					<string>Shadow-</string>
+					<key>link</key>
+					<string>https://iosjb.top</string>
+				</dict>
+				<dict>
+					<key>name</key>
 					<string>roothideDev</string>
 					<key>link</key>
 					<string>https://twitter.com/roothideDev</string>

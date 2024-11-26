@@ -274,10 +274,17 @@ int __posix_spawn_hook(pid_t *restrict pidp, const char *restrict path, struct _
         posix_spawnattr_setflags(attrp, flags | POSIX_SPAWN_START_SUSPENDED);
     }
 
+	// on some devices dyldhook may fail due to vm_protect(VM_PROT_READ|VM_PROT_WRITE), 2, (os/kern) protection failure in dsc::__DATA_CONST:__const, 
+	// so we need to disable dyld-in-cache here. (or we can use VM_PROT_READ|VM_PROT_WRITE|VM_PROT_COPY)
+	char **envc = envbuf_mutcopy((const char **)envp);
+	envbuf_setenv(&envc, "DYLD_IN_CACHE", "0");
+
     int pid = 0;
     if (!pidp) pidp = &pid;
-    int ret = posix_spawn_hook_shared(pidp, path, desc, argv, envp, __posix_spawn_orig_wrapper, systemwide_trust_binary, platform_set_process_debugged, jbsetting(jetsamMultiplier));
+    int ret = posix_spawn_hook_shared(pidp, path, desc, argv, envc, __posix_spawn_orig_wrapper, systemwide_trust_binary, platform_set_process_debugged, jbsetting(jetsamMultiplier));
     pid = *pidp;
+
+	envbuf_free(envc);
 	
 	posix_spawnattr_setflags(attrp, flags); // maybe caller will use it again?
 

@@ -45,8 +45,6 @@ NSString *getAppIdentifierFromPath(const char *path) {
     NSString *identifier = appInfo[@"CFBundleIdentifier"];
     if (!identifier) return nil;
 
-    JBLogDebug("spawn app [%s] %s", identifier.UTF8String, path);
-
     return identifier;
 }
 

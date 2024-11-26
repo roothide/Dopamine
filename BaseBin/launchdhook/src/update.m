@@ -112,11 +112,7 @@ void jbupdate_update_system_info(void)
 		void (*xpf_stop)(void) = dlsym(xpfHandle, "xpf_stop");
 		xpc_object_t (*xpf_construct_offset_dictionary)(const char *sets[]) = dlsym(xpfHandle, "xpf_construct_offset_dictionary");
 
-		// XXX: this is also a hack
-		struct statfs fst={0};
-		statfs("/usr/standalone/firmware", &fst);
-		char kernelPath[PATH_MAX];
-		snprintf(kernelPath,sizeof(kernelPath),"%s/../../../System/Library/Caches/com.apple.kernelcaches/kernelcache", fst.f_mntfromname);
+		const char *kernelPath = prebootUUIDPath("/System/Library/Caches/com.apple.kernelcaches/kernelcache");
 		xpc_object_t systemInfoXdict = NULL;
 
 		// Rerun patchfinder
@@ -144,10 +140,10 @@ void jbupdate_update_system_info(void)
 			if (xpf_set_is_supported("amfi_oids")) {
 				sets[idx++] = "amfi_oids";
 			}
+
 			if (xpf_set_is_supported("devmode")) {
 				sets[idx++] = "devmode"; 
 			}
-
 			if (xpf_set_is_supported("badRecovery")) {
 				sets[idx++] = "badRecovery"; 
 			}
