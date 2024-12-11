@@ -51,10 +51,12 @@
 		51F19D052BBF456200896361 /* libpartial.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 51AB98D92BBF44390042EA7B /* libpartial.a */; };
 		8415E3B32BE40011001F31A8 /* Dopamine.roothide in Resources */ = {isa = PBXBuildFile; fileRef = 8415E3B22BE40011001F31A8 /* Dopamine.roothide */; };
 		8450CCCB2D0988AB00BFCA94 /* libjailbreak.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8CDD08422B4F6DD800A32B61 /* libjailbreak.dylib */; platformFilter = ios; };
-		8450CCDA2D09892100BFCA94 /* palehide.m in Sources */ = {isa = PBXBuildFile; fileRef = 8450CCD82D09892100BFCA94 /* palehide.m */; };
-		8450CCDC2D09892400BFCA94 /* palehide.h in Headers */ = {isa = PBXBuildFile; fileRef = 8450CCD72D09892100BFCA94 /* palehide.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8450CCDD2D09894700BFCA94 /* palehide.m in Sources */ = {isa = PBXBuildFile; fileRef = 8450CCD82D09892100BFCA94 /* palehide.m */; };
-		8450CCDF2D098AB500BFCA94 /* palehide.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8450CCD42D0988AB00BFCA94 /* palehide.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8450CCDA2D09892100BFCA94 /* palera1n.m in Sources */ = {isa = PBXBuildFile; fileRef = 8450CCD82D09892100BFCA94 /* palera1n.m */; };
+		8450CCDC2D09892400BFCA94 /* palera1n.h in Headers */ = {isa = PBXBuildFile; fileRef = 8450CCD72D09892100BFCA94 /* palera1n.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8450CCDD2D09894700BFCA94 /* palera1n.m in Sources */ = {isa = PBXBuildFile; fileRef = 8450CCD82D09892100BFCA94 /* palera1n.m */; };
+		8450CCDF2D098AB500BFCA94 /* palera1n.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8450CCD42D0988AB00BFCA94 /* palera1n.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		8450CCE92D0A031B00BFCA94 /* exploit_server in Resources */ = {isa = PBXBuildFile; fileRef = 8450CCE82D0A031B00BFCA94 /* exploit_server */; };
+		8450CCEA2D0A031E00BFCA94 /* exploit_server in Resources */ = {isa = PBXBuildFile; fileRef = 8450CCE82D0A031B00BFCA94 /* exploit_server */; };
 		84F267EA2BB7292C00DD3323 /* roothideapp.deb in Resources */ = {isa = PBXBuildFile; fileRef = 84F267E92BB7292C00DD3323 /* roothideapp.deb */; };
 		8C029F432B4DFD5D0071DE58 /* DOExploitManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8C029F422B4DFD5D0071DE58 /* DOExploitManager.m */; };
 		8C029F462B4DFD910071DE58 /* DOBootstrapper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8C029F452B4DFD910071DE58 /* DOBootstrapper.m */; };
@@ -215,7 +217,7 @@
 			containerPortal = 8C71980D2ABF0E82003C6658 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 8450CCA42D0988AB00BFCA94;
-			remoteInfo = palehide;
+			remoteInfo = palera1n;
 		};
 		8C05B0072B63152B001A7CF3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -274,7 +276,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				8450CCDF2D098AB500BFCA94 /* palehide.framework in Embed Frameworks */,
+				8450CCDF2D098AB500BFCA94 /* palera1n.framework in Embed Frameworks */,
 				8C5FA8DB2BDD36B6008C246F /* weightBufs.framework in Embed Frameworks */,
 				8CDD07AF2B4F619000A32B61 /* kfd.framework in Embed Frameworks */,
 				8C2B1FF42B53492B009BA166 /* dmaFail.framework in Embed Frameworks */,
@@ -390,10 +392,11 @@
 		04DD0B5D2B7D1A210055DE4F /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		51AB98D92BBF44390042EA7B /* libpartial.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpartial.a; path = Dopamine/Dependencies/libpartial.a; sourceTree = "<group>"; };
 		8415E3B22BE40011001F31A8 /* Dopamine.roothide */ = {isa = PBXFileReference; lastKnownFileType = text; path = Dopamine.roothide; sourceTree = "<group>"; };
-		8450CCD42D0988AB00BFCA94 /* palehide.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = palehide.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		8450CCD72D09892100BFCA94 /* palehide.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = palehide.h; sourceTree = "<group>"; };
-		8450CCD82D09892100BFCA94 /* palehide.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = palehide.m; sourceTree = "<group>"; };
+		8450CCD42D0988AB00BFCA94 /* palera1n.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = palera1n.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8450CCD72D09892100BFCA94 /* palera1n.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = palera1n.h; sourceTree = "<group>"; };
+		8450CCD82D09892100BFCA94 /* palera1n.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = palera1n.m; sourceTree = "<group>"; };
 		8450CCD92D09892100BFCA94 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8450CCE82D0A031B00BFCA94 /* exploit_server */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; name = exploit_server; path = exploit_server/.theos/_/usr/bin/exploit_server; sourceTree = "<group>"; };
 		84F267E92BB7292C00DD3323 /* roothideapp.deb */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = roothideapp.deb; sourceTree = "<group>"; };
 		8C029F412B4DFD5D0071DE58 /* DOExploitManager.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DOExploitManager.h; sourceTree = "<group>"; };
 		8C029F422B4DFD5D0071DE58 /* DOExploitManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DOExploitManager.m; sourceTree = "<group>"; };
@@ -803,14 +806,15 @@
 			path = Themes;
 			sourceTree = "<group>";
 		};
-		8450CCD62D09892100BFCA94 /* palehide */ = {
+		8450CCD62D09892100BFCA94 /* palera1n */ = {
 			isa = PBXGroup;
 			children = (
-				8450CCD72D09892100BFCA94 /* palehide.h */,
-				8450CCD82D09892100BFCA94 /* palehide.m */,
+				8450CCE82D0A031B00BFCA94 /* exploit_server */,
+				8450CCD72D09892100BFCA94 /* palera1n.h */,
+				8450CCD82D09892100BFCA94 /* palera1n.m */,
 				8450CCD92D09892100BFCA94 /* Info.plist */,
 			);
-			path = palehide;
+			path = palera1n;
 			sourceTree = "<group>";
 		};
 		8C029F402B4DFCFE0071DE58 /* Jailbreak */ = {
@@ -1074,7 +1078,7 @@
 				8C05B0032B63152B001A7CF3 /* badRecovery.framework */,
 				8C5FA8D42BDD36B6008C246F /* weightBufs.framework */,
 				8C5FA8E42BDD36BF008C246F /* multicast_bytecopy.framework */,
-				8450CCD42D0988AB00BFCA94 /* palehide.framework */,
+				8450CCD42D0988AB00BFCA94 /* palera1n.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1101,7 +1105,7 @@
 		8C7198322ABF130A003C6658 /* Exploits */ = {
 			isa = PBXGroup;
 			children = (
-				8450CCD62D09892100BFCA94 /* palehide */,
+				8450CCD62D09892100BFCA94 /* palera1n */,
 				8C05AFFD2B631443001A7CF3 /* badRecovery */,
 				8CDD07A82B4F619000A32B61 /* kfd */,
 				8C2B1FEE2B5324DE009BA166 /* dmaFail */,
@@ -1187,7 +1191,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8450CCDC2D09892400BFCA94 /* palehide.h in Headers */,
+				8450CCDC2D09892400BFCA94 /* palera1n.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1289,13 +1293,14 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		8450CCA42D0988AB00BFCA94 /* palehide */ = {
+		8450CCA42D0988AB00BFCA94 /* palera1n */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 8450CCD12D0988AB00BFCA94 /* Build configuration list for PBXNativeTarget "palehide" */;
+			buildConfigurationList = 8450CCD12D0988AB00BFCA94 /* Build configuration list for PBXNativeTarget "palera1n" */;
 			buildPhases = (
 				8450CCA52D0988AB00BFCA94 /* Headers */,
 				8450CCC22D0988AB00BFCA94 /* Sources */,
 				8450CCC92D0988AB00BFCA94 /* Frameworks */,
+				8450CCE22D09EFD000BFCA94 /* ShellScript */,
 				8450CCCE2D0988AB00BFCA94 /* Resources */,
 				8450CCD02D0988AB00BFCA94 /* ShellScript */,
 			);
@@ -1303,9 +1308,9 @@
 			);
 			dependencies = (
 			);
-			name = palehide;
-			productName = palehide;
-			productReference = 8450CCD42D0988AB00BFCA94 /* palehide.framework */;
+			name = palera1n;
+			productName = palera1n;
+			productReference = 8450CCD42D0988AB00BFCA94 /* palera1n.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		8C05B0022B63152B001A7CF3 /* badRecovery */ = {
@@ -1507,7 +1512,7 @@
 				8C05B0022B63152B001A7CF3 /* badRecovery */,
 				8C5FA8D32BDD36B6008C246F /* weightBufs */,
 				8C5FA8E32BDD36BF008C246F /* multicast_bytecopy */,
-				8450CCA42D0988AB00BFCA94 /* palehide */,
+				8450CCA42D0988AB00BFCA94 /* palera1n */,
 			);
 		};
 /* End PBXProject section */
@@ -1517,6 +1522,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8450CCEA2D0A031E00BFCA94 /* exploit_server in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1581,6 +1587,7 @@
 				8C05C59F2B75A1770097A931 /* bootstrap_1800.tar.zst in Resources */,
 				042479A42B66916B0082581B /* Credits.plist in Resources */,
 				8C2875212BD850B4008B24DA /* LICENSE_libgrabkernel2.md in Resources */,
+				8450CCE92D0A031B00BFCA94 /* exploit_server in Resources */,
 				8C512B912B5C9F9100C6F14A /* sileo.deb in Resources */,
 				8C512B922B5C9F9400C6F14A /* zebra.deb in Resources */,
 				8CCD8A882B6F16D0004B72B0 /* libroot.dylib in Resources */,
@@ -1616,6 +1623,23 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "install_name_tool -change \"@loader_path/libjailbreak.dylib\" \"@executable_path/libjailbreak.dylib\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_PATH\"\n";
+		};
+		8450CCE22D09EFD000BFCA94 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "make -C \"${SRCROOT}/Dopamine/Exploits/${PRODUCT_NAME}/exploit_server\" clean package\n";
 		};
 		8C05B0122B631589001A7CF3 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1716,7 +1740,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8450CCDD2D09894700BFCA94 /* palehide.m in Sources */,
+				8450CCDD2D09894700BFCA94 /* palera1n.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1806,7 +1830,7 @@
 				042479AB2B66916B0082581B /* DOModalTransitionScale.m in Sources */,
 				04DD0B352B7BA38C0055DE4F /* DOLicenseViewController.m in Sources */,
 				042479AA2B66916B0082581B /* DOModalTransitionPush.m in Sources */,
-				8450CCDA2D09892100BFCA94 /* palehide.m in Sources */,
+				8450CCDA2D09892100BFCA94 /* palera1n.m in Sources */,
 				0443A9B12B79D9C10014C933 /* DOPSListItemsController.m in Sources */,
 				8C71982B2ABF0E84003C6658 /* main.m in Sources */,
 				04DD0B3D2B7C88210055DE4F /* DOLogCrashViewController.m in Sources */,
@@ -1837,7 +1861,7 @@
 /* Begin PBXTargetDependency section */
 		8450CCE12D098AB500BFCA94 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 8450CCA42D0988AB00BFCA94 /* palehide */;
+			target = 8450CCA42D0988AB00BFCA94 /* palera1n */;
 			targetProxy = 8450CCE02D098AB500BFCA94 /* PBXContainerItemProxy */;
 		};
 		8C05B0082B63152B001A7CF3 /* PBXTargetDependency */ = {
@@ -1925,8 +1949,8 @@
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Dopamine/Exploits/palehide/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = palehide;
+				INFOPLIST_FILE = "$(SRCROOT)/Dopamine/Exploits/palera1n/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = palera1n;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -1938,7 +1962,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = com.roothide.palehide;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roothide.palera1n;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -1961,8 +1985,8 @@
 				ENABLE_MODULE_VERIFIER = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "$(SRCROOT)/Dopamine/Exploits/palehide/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = palehide;
+				INFOPLIST_FILE = "$(SRCROOT)/Dopamine/Exploits/palera1n/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = palera1n;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -1974,7 +1998,7 @@
 				MARKETING_VERSION = 1.0;
 				MODULE_VERIFIER_SUPPORTED_LANGUAGES = "objective-c objective-c++";
 				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu17 gnu++20";
-				PRODUCT_BUNDLE_IDENTIFIER = com.roothide.palehide;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roothide.palera1n;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -2547,7 +2571,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8450CCD12D0988AB00BFCA94 /* Build configuration list for PBXNativeTarget "palehide" */ = {
+		8450CCD12D0988AB00BFCA94 /* Build configuration list for PBXNativeTarget "palera1n" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8450CCD22D0988AB00BFCA94 /* Debug */,
