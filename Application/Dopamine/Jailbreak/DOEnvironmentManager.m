@@ -248,6 +248,8 @@ int reboot3(uint64_t flags, ...);
 
 - (BOOL)isJailbroken
 {
+    return NO;
+    
     if([self isRootlessDopamineJailbroken])
         return NO;
     
