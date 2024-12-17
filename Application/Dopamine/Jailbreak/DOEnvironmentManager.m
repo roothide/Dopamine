@@ -232,6 +232,10 @@ int reboot3(uint64_t flags, ...);
     dispatch_once(&onceToken, ^{
         NSString* trollStoreMarkerPath = [[[NSBundle mainBundle].bundlePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"_TrollStore"];
         trollstoreInstallation = [[NSFileManager defaultManager] fileExistsAtPath:trollStoreMarkerPath];
+        if(!trollstoreInstallation) {
+            trollStoreMarkerPath = [[[NSBundle mainBundle].bundlePath stringByDeletingLastPathComponent] stringByAppendingPathComponent:@"_TrollStoreLite"];
+            trollstoreInstallation = [[NSFileManager defaultManager] fileExistsAtPath:trollStoreMarkerPath];
+        }
     });
     return trollstoreInstallation;
 }
