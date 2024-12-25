@@ -55,7 +55,6 @@
 		8450CCDC2D09892400BFCA94 /* palera1n.h in Headers */ = {isa = PBXBuildFile; fileRef = 8450CCD72D09892100BFCA94 /* palera1n.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8450CCDD2D09894700BFCA94 /* palera1n.m in Sources */ = {isa = PBXBuildFile; fileRef = 8450CCD82D09892100BFCA94 /* palera1n.m */; };
 		8450CCDF2D098AB500BFCA94 /* palera1n.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 8450CCD42D0988AB00BFCA94 /* palera1n.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		8450CCE92D0A031B00BFCA94 /* exploit_server in Resources */ = {isa = PBXBuildFile; fileRef = 8450CCE82D0A031B00BFCA94 /* exploit_server */; };
 		8450CCEA2D0A031E00BFCA94 /* exploit_server in Resources */ = {isa = PBXBuildFile; fileRef = 8450CCE82D0A031B00BFCA94 /* exploit_server */; };
 		84F267EA2BB7292C00DD3323 /* roothideapp.deb in Resources */ = {isa = PBXBuildFile; fileRef = 84F267E92BB7292C00DD3323 /* roothideapp.deb */; };
 		8C029F432B4DFD5D0071DE58 /* DOExploitManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8C029F422B4DFD5D0071DE58 /* DOExploitManager.m */; };
@@ -1587,7 +1586,6 @@
 				8C05C59F2B75A1770097A931 /* bootstrap_1800.tar.zst in Resources */,
 				042479A42B66916B0082581B /* Credits.plist in Resources */,
 				8C2875212BD850B4008B24DA /* LICENSE_libgrabkernel2.md in Resources */,
-				8450CCE92D0A031B00BFCA94 /* exploit_server in Resources */,
 				8C512B912B5C9F9100C6F14A /* sileo.deb in Resources */,
 				8C512B922B5C9F9400C6F14A /* zebra.deb in Resources */,
 				8CCD8A882B6F16D0004B72B0 /* libroot.dylib in Resources */,
