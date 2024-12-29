@@ -4,7 +4,7 @@
 
 - Support: https://twitter.com/roothideDev
 
-- Discord: https://discord.com/invite/scqCkumAYp
+- Discord: https://discord.gg/ZvY2Yjw8GA
 
 
 # How To Build tipa file
