@@ -134,8 +134,8 @@
     
     self.jailbreakBtn = [[DOJailbreakButton alloc] initWithAction: [UIAction actionWithTitle:jailbreakButtonTitle image:jailbreakButtonImage identifier:@"jailbreak" handler:^(__kindof UIAction * _Nonnull action) {
         
-        if([DOEnvironmentManager.sharedManager isRootlessDopamineJailbroken]) {
-            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Error") message:DOLocalizedString(@"rootless dopamine jailbroken at present, please reboot the device.") preferredStyle:UIAlertControllerStyleAlert];
+        if([DOEnvironmentManager.sharedManager isOtherJailbreakActived]) {
+            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Error") message:DOLocalizedString(@"Your device currently has another jailbreak activated, please reboot device.") preferredStyle:UIAlertControllerStyleAlert];
             UIAlertAction *rebootAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Close") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 //exit(0);
             }];

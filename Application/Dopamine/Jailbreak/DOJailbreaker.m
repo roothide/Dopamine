@@ -612,10 +612,10 @@ int ensure_randomized_cdhash(const char* inputPath, void* cdhashOut);
     [[DOUIManager sharedInstance] sendLog:DOLocalizedString(@"Applying Bind Mount") debug:NO];
     *errOut = [self createFakeLib];
     if (*errOut) return;
-*/
     
     // Unsandbox iconservicesagent so that app icons can work
     exec_cmd_trusted(JBROOT_PATH("/usr/bin/killall"), "-9", "iconservicesagent", NULL);
+*/
     
     *errOut = [self finalizeBootstrapIfNeeded];
     if (*errOut) return;
