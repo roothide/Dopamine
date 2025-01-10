@@ -23,6 +23,7 @@
 char HOOK_DYLIB_PATH[PATH_MAX] = {0};
 
 bool gInEarlyBoot = true;
+bool gFirstLoad = false;
 
 #define RB_QUICK	0x400
 #define RB_PANIC	0x800
@@ -159,6 +160,7 @@ __attribute__((constructor)) static void initializer(void)
 		// Here we should have been injected into a live launchd on the fly
 		// In this case, we are not in early boot...
 		gInEarlyBoot = false;
+		gFirstLoad = true;
 		firstLoad = true;
 	}
 
