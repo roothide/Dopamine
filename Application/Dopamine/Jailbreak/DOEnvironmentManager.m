@@ -236,19 +236,33 @@ int reboot3(uint64_t flags, ...);
     return trollstoreInstallation;
 }
 
-- (BOOL)isRootlessDopamineJailbroken
+- (BOOL)isOtherJailbreakActived
 {
-     struct statfs fs;
-     int sfsret = statfs("/usr/lib", &fs);
-     if (sfsret == 0) {
-         return strcmp(fs.f_mntonname, "/usr/lib")==0;
-     }
-     return NO;
+    if(access("/dev/md0", F_OK)==0) {
+        return YES;
+    }
+    
+    if(access("/dev/rmd0", F_OK)==0) {
+        return YES;
+    }
+    
+    struct statfs fs;
+    int sfsret = statfs("/usr/lib", &fs);
+    if (sfsret == 0) {
+        if(strcmp(fs.f_mntonname, "/usr/lib")==0) {
+            return YES;
+        }
+    }
+    
+    return NO;
 }
 
 - (BOOL)isJailbroken
 {
-    if([self isRootlessDopamineJailbroken])
+    if([self isOtherJailbreakActived])
+        return NO;
+    
+    if(!jbclient_get_jbroot())
         return NO;
     
     static BOOL jailbroken = NO;

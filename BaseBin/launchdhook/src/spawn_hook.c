@@ -16,6 +16,7 @@ extern int platform_set_process_debugged(uint64_t pid, bool fullyDebugged);
 #define LOG_PROCESS_LAUNCHES 0
 
 extern bool gInEarlyBoot;
+extern bool gFirstLoad;
 
 void early_boot_done(void)
 {
@@ -244,6 +245,11 @@ int __posix_spawn_hook(pid_t *restrict pidp, const char *restrict path, struct _
 		}
 	}
 
+	if(gFirstLoad) {
+		//we should not enable system-wide injection until the jailbreak is finalized (userspace reboot).
+		return __posix_spawn_orig_wrapper(pidp, path, desc, argv, envp);
+	}
+
     if (isBlacklisted(path)) {
         JBLogDebug("blacklisted app %s", path);
 
@@ -253,7 +259,7 @@ int __posix_spawn_hook(pid_t *restrict pidp, const char *restrict path, struct _
 		envbuf_unsetenv(&envc, "_SafeMode");
 		envbuf_unsetenv(&envc, "_MSSafeMode");
 
-        int ret = __posix_spawn_orig_wrapper(pidp, path, desc, argv, envp);
+        int ret = __posix_spawn_orig_wrapper(pidp, path, desc, argv, envc);
 
 		envbuf_free(envc);
 

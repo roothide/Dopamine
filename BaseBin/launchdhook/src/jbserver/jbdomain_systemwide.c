@@ -56,6 +56,8 @@ char *combine_strings(char separator, char **components, int count)
 #include "exec_patch.h"
 #include "libjailbreak/log.h"
 
+extern bool gFirstLoad;
+
 bool is_sub_path(const char* parent, const char* child)
 {
 	char real_child[PATH_MAX]={0};
@@ -291,7 +293,7 @@ static int systemwide_process_checkin(audit_token_t *processToken, char **rootPa
 	else if (string_has_suffix(procPath, "/Dopamine.app/Dopamine")) {
 char roothidefile[PATH_MAX];
 snprintf(roothidefile, sizeof(roothidefile), "%s.roothide",procPath);
-if(access(roothidefile, F_OK)==0) {
+if(access(roothidefile, F_OK)==0 && !gFirstLoad) {
 		// svuid = 0, svgid = 0
 		uint64_t ucred = proc_ucred(proc);
 		kwrite32(proc + koffsetof(proc, svuid), 0);

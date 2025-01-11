@@ -64,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (NSError *)deleteBootstrap;
 - (NSError *)reinstallPackageManagers;
 
-- (BOOL)isRootlessDopamineJailbroken;
+- (BOOL)isOtherJailbreakActived;
 
 @end
 

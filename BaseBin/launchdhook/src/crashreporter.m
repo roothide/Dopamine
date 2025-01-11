@@ -414,7 +414,7 @@ void *crashreporter_listen(void *arg)
 void crashreporter_pause(void)
 {
 	if (gCrashReporterState == kCrashReporterStateActive) {
-		task_set_exception_ports(mach_task_self_, EXC_MASK_CRASH_RELATED, 0, EXCEPTION_DEFAULT, ARM_THREAD_STATE64);
+		task_set_exception_ports(mach_task_self_, EXC_MASK_CRASH_RELATED, MACH_PORT_NULL, 0, 0);
 		NSSetUncaughtExceptionHandler(defaultNSExceptionHandler);
 		defaultNSExceptionHandler = nil;
 		gCrashReporterState = kCrashReporterStatePaused;

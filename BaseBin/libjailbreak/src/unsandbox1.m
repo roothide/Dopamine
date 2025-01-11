@@ -47,6 +47,28 @@ static void print_nc(uint64_t ncp)
 	}
 }
 
+static int make_tail_file()
+{
+    char tail[PATH_MAX];
+    snprintf(tail, sizeof(tail), "/tmp/%u", arc4random());
+    printf("tail=%s\n", tail);
+    int tailfd = open(tail, O_RDWR|O_CREAT, 0666);
+    if(tailfd < 0) return -1;
+    printf("tailfd=%d\n", tailfd);
+    uint64_t tailvp = proc_fd_vnode(proc_self(), tailfd);
+    if(tailvp == 0) return -1;
+    printf("tailvp=%llx\n", tailvp);
+	struct vnode tailvnode;
+	kreadbuf(tailvp, &tailvnode, sizeof(tailvnode));
+    struct namecache tailnc={0};
+	uint64_t tailncp = (uint64_t)tailvnode.v_nclinks.lh_first;
+    printf("tailncp=%llx\n", tailncp);
+	kreadbuf(tailncp, &tailnc, sizeof(tailnc));
+    printf("tailnc.nc_entry.tqe_prev=%llx\n", tailnc.nc_entry.tqe_prev);
+    printf("tailnc.nc_entry.tqe_next=%llx\n", tailnc.nc_entry.tqe_next);
+    return 0;
+}
+
 int unsandbox1(const char* dir, const char* file)
 {
 	int ret = 0;
@@ -63,6 +85,13 @@ int unsandbox1(const char* dir, const char* file)
 		JBLogError("open file failed %d,%s", errno, strerror(errno));
 		goto failed;
 	}
+
+	/* we need to create a new namecache to add to the tail of nchead 
+        after the kernel caches the namecache for "file" to avoid filenc.nc_entry.tqe_next==0 */
+    if(make_tail_file() != 0) {
+        JBLogError("make_tail_file failed %d,%s", errno, strerror(errno));
+        goto failed;
+    }
 
     uint64_t dirvp = proc_fd_vnode(proc_self(), dirfd);
 	if(!dirvp) {
@@ -193,6 +222,36 @@ int unsandbox1(const char* dir, const char* file)
 
 		kwrite64(filencp+offsetof(struct namecache,nc_child.tqe_next), filencp); //TAILQ_CHECK_NEXT
 		kwrite64(filencp+offsetof(struct namecache,nc_child.tqe_prev), filencp+offsetof(struct namecache,nc_child.tqe_next)); //TAILQ_CHECK_PREV
+	}
+		
+	//TAILQ_REMOVE(&nchead, ncp, nc_entry);
+	{	
+		uint64_t ncp = filencp;
+		if(filenc.nc_entry.tqe_next) { //always true for filenc next time
+			//TAILQ_NEXT((elm), field)->field.tqe_prev = (elm)->field.tqe_prev;
+			kwrite64((uint64_t)filenc.nc_entry.tqe_next+offsetof(struct namecache, nc_entry.tqe_prev), (uint64_t)filenc.nc_entry.tqe_prev);
+		} else {
+			//(head)->tqh_last = (elm)->field.tqe_prev;
+			abort();
+		}
+		//*(elm)->field.tqe_prev = TAILQ_NEXT((elm), field);
+		kwrite64((uint64_t)filenc.nc_entry.tqe_prev, (uint64_t)filenc.nc_entry.tqe_next);
+
+		kwrite64(filencp+offsetof(struct namecache,nc_entry.tqe_next), filencp); //TAILQ_CHECK_NEXT
+		kwrite64(filencp+offsetof(struct namecache,nc_entry.tqe_prev), filencp+offsetof(struct namecache,nc_entry.tqe_next)); //TAILQ_CHECK_PREV
+	}
+
+    //LIST_REMOVE(ncp, nc_un.nc_link);
+	{
+		uint64_t ncp = filencp;
+		
+		if(filenc.nc_un.nc_link.le_next) {
+			//LIST_NEXT((elm), field)->field.le_prev =(elm)->field.le_prev;
+			kwrite64((uint64_t)filenc.nc_hash.le_next+offsetof(struct namecache, nc_un.nc_link.le_prev), (uint64_t)filenc.nc_un.nc_link.le_prev); //next->prev = prev
+		}
+
+		//*(elm)->field.le_prev = LIST_NEXT((elm), field);
+		kwrite64((uint64_t)filenc.nc_un.nc_link.le_prev, (uint64_t)filenc.nc_un.nc_link.le_next);
 	}
 
 	JBLogDebug("final hash chain\n");
