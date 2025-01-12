@@ -28,7 +28,9 @@ fork this repo then goto tab [Actions] -> [All Workflows] -> [build tip file] ->
 ![text](/.pictures/m5.png)
 
 
-- step 4: when the build is complete, go to the bottom of the build page to download the tipa file
+- step 4: when the build is complete, go to the bottom of the build page to download the tipa file.
+  
+  (***NOTE: The downloaded file is in zip format, you need to unzip it on your device to get the tipa file***)
 
 ![text](/.pictures/m6.png)
 
