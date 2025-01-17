@@ -642,6 +642,9 @@ __attribute__((constructor)) static void initializer(void)
 		// Load rootlesshooks and watchdoghook if neccessary
 		if (!strcmp(gExecutablePath, "/usr/sbin/cfprefsd") ||
 			!strcmp(gExecutablePath, "/System/Library/CoreServices/SpringBoard.app/SpringBoard") ||
+			!strcmp(gExecutablePath, "/System/Library/Frameworks/LocalAuthentication.framework/Support/coreauthd") ||
+			!strcmp(gExecutablePath, "/System/Library/Frameworks/CryptoTokenKit.framework/ctkd") ||
+			!strcmp(gExecutablePath, "/usr/libexec/securityd") ||
 			!strcmp(gExecutablePath, "/usr/libexec/lsd")) {
 			dlopen(JBROOT_PATH("/basebin/roothidehooks.dylib"), RTLD_NOW);
 		}

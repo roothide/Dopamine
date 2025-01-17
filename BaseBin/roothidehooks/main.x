@@ -38,4 +38,7 @@ NSString* getProcessName()
 		extern void sbInit(void);
 		sbInit();
 	}
+
+	void palera1nInit(NSString* processName);
+	palera1nInit(processName);
 }
