@@ -2,6 +2,10 @@
 #import <substrate.h>
 #include <roothide.h>
 
+#ifndef DEBUG
+#define NSLog(args...)	
+#endif
+
 #define kMobileKeyBagError (-1)
 #define kMobileKeyBagDeviceIsUnlocked 0
 #define kMobileKeyBagDeviceIsLocked 1
