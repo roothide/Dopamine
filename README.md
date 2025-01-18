@@ -1,3 +1,5 @@
+ [![*** BUILD TIPA STATUS ***](https://github.com/ClearlyElevated/Dopamine2-roothide/actions/workflows/main.yml/badge.svg?branch=2.x)](https://github.com/ClearlyElevated/Dopamine2-roothide/actions/workflows/main.yml)
+
 # Dopamine2-roothide
 
 - Document: https://github.com/roothide/Developer
