@@ -1,6 +1,6 @@
 #import "internal.h"
-#import "codesign.h"
 #import "dyldpatch.h"
+#import "codesign.h"
 #import <libjailbreak/carboncopy.h>
 #import <Foundation/Foundation.h>
 #import <libjailbreak/libjailbreak.h>
@@ -8,6 +8,7 @@
 
 SInt32 CFUserNotificationDisplayAlert(CFTimeInterval timeout, CFOptionFlags flags, CFURLRef iconURL, CFURLRef soundURL, CFURLRef localizationURL, CFStringRef alertHeader, CFStringRef alertMessage, CFStringRef defaultButtonTitle, CFStringRef alternateButtonTitle, CFStringRef otherButtonTitle, CFOptionFlags *responseFlags) API_AVAILABLE(ios(3.0));
 
+/*
 void execute_unsandboxed(void (^block)(void))
 {
 	uint64_t credBackup = 0;
@@ -38,9 +39,10 @@ void ensureProtectionActive(void)
 {
 	// Protect /private/preboot/UUID/<System, usr> from being modified by bind mounting them on top of themselves
 	// This protects dumb users from accidentally deleting these, which would induce a recovery loop after rebooting
-	// ensureProtected(prebootUUIDPath("/System"));
-	// ensureProtected(prebootUUIDPath("/usr"));
+	ensureProtected(prebootUUIDPath("/System"));
+	ensureProtected(prebootUUIDPath("/usr"));
 }
+*/
 
 int jbctl_handle_internal(const char *command, int argc, char* argv[])
 {
@@ -85,13 +87,14 @@ int jbctl_handle_internal(const char *command, int argc, char* argv[])
 		mach_port_deallocate(mach_task_self(), launchdTaskPort);
 		return 0;
 	}
+/*
 	else if (!strcmp(command, "protection_init")) {
 		ensureProtectionActive();
 		return 0;
 	}
 	else if (!strcmp(command, "fakelib_init")) {
-		NSString *basebinPath = NSJBRootPath(@"/basebin");
-		NSString *fakelibPath = NSJBRootPath(@"/basebin/.fakelib");
+		NSString *basebinPath = JBROOT_PATH(@"/basebin");
+		NSString *fakelibPath = JBROOT_PATH(@"/basebin/.fakelib");
 		printf("Initalizing fakelib...\n");
 
 		// Copy /usr/lib to /var/jb/basebin/.fakelib
@@ -100,29 +103,29 @@ int jbctl_handle_internal(const char *command, int argc, char* argv[])
 		carbonCopy(@"/usr/lib", fakelibPath);
 
 		// Backup and patch dyld
-		NSString *dyldBackupPath = NSJBRootPath(@"/basebin/.dyld.orig");
-		NSString *dyldPatchPath = NSJBRootPath(@"/basebin/.dyld.patched");
+		NSString *dyldBackupPath = JBROOT_PATH(@"/basebin/.dyld.orig");
+		NSString *dyldPatchPath = JBROOT_PATH(@"/basebin/.dyld.patched");
 		carbonCopy(@"/usr/lib/dyld", dyldBackupPath);
 		carbonCopy(@"/usr/lib/dyld", dyldPatchPath);
 		apply_dyld_patch(dyldPatchPath.fileSystemRepresentation);
 		resign_file(dyldPatchPath, YES);
 
 		// Copy systemhook to fakelib
-		carbonCopy(NSJBRootPath(@"/basebin/systemhook.dylib"), NSJBRootPath(@"/basebin/.fakelib/systemhook.dylib"));
+		carbonCopy(JBROOT_PATH(@"/basebin/systemhook.dylib"), JBROOT_PATH(@"/basebin/.fakelib/systemhook.dylib"));
 
 		// Replace dyld in fakelib with patched dyld
-		// NSString *fakelibDyldPath = [fakelibPath stringByAppendingPathComponent:@"dyld"];
-		// [[NSFileManager defaultManager] removeItemAtPath:fakelibDyldPath error:nil];
-		// carbonCopy(dyldPatchPath, NSJBRootPath(@"/basebin/.fakelib/dyld"));
-
+		NSString *fakelibDyldPath = [fakelibPath stringByAppendingPathComponent:@"dyld"];
+		[[NSFileManager defaultManager] removeItemAtPath:fakelibDyldPath error:nil];
+		carbonCopy(dyldPatchPath, JBROOT_PATH(@"/basebin/.fakelib/dyld"));
 		return 0;
 	}
 	else if (!strcmp(command, "fakelib_mount")) {
 		printf("Applying mount...\n");
-		return mount_unsandboxed("bindfs", "/usr/lib", MNT_RDONLY, (void *)JBRootPath("/basebin/.fakelib"));
+		return mount_unsandboxed("bindfs", "/usr/lib", MNT_RDONLY, (void *)JBROOT_PATH("/basebin/.fakelib"));
 	}
+*/
 	else if (!strcmp(command, "startup")) {
-		ensureProtectionActive();
+//		ensureProtectionActive();
 		char *panicMessage = NULL;
 		if (jbclient_watchdog_get_last_userspace_panic(&panicMessage) == 0) {
 			NSString *printMessage = [NSString stringWithFormat:@"Dopamine has protected you from a userspace panic by temporarily disabling tweak injection and triggering a userspace reboot instead. A log is available under Analytics in the Preferences app. You can reenable tweak injection in the Dopamine app.\n\nPanic message: \n%s", panicMessage];
@@ -131,14 +134,14 @@ int jbctl_handle_internal(const char *command, int argc, char* argv[])
 		}
 
 		//only bootstrap after launchdhook and systemhook available
-		exec_cmd(JBRootPath("/usr/bin/launchctl"), "bootstrap", "system", "/Library/LaunchDaemons", NULL);
+		exec_cmd(JBROOT_PATH("/usr/bin/launchctl"), "bootstrap", "system", "/Library/LaunchDaemons", NULL);
 
-		exec_cmd(JBRootPath("/usr/bin/uicache"), "-a", NULL);
+		exec_cmd(JBROOT_PATH("/usr/bin/uicache"), "-a", NULL);
 	}
 	else if (!strcmp(command, "install_pkg")) {
 		if (argc > 1) {
 			extern char **environ;
-			char *dpkg = JBRootPath("/usr/bin/dpkg");
+			char *dpkg = JBROOT_PATH("/usr/bin/dpkg");
 			int r = execve(dpkg, (char *const *)(const char *[]){dpkg, "-i", argv[1], NULL}, environ);
 			return r;
 		}

@@ -97,6 +97,56 @@ xpc_object_t jbserver_xpc_send(uint64_t domain, uint64_t action, xpc_object_t xa
 	return xreply;
 }
 
+/////////////////////////////////////////////
+int jbclient_cs_drop_get_task_allow(void){
+    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_CS_DROP_GET_TASK_ALLOW, NULL);
+    if (xreply) {
+        int result = xpc_dictionary_get_int64(xreply, "result");
+        xpc_release(xreply);
+        return result;
+    }
+    return -1;
+}
+
+int jbclient_patch_spawn(int pid, bool resume){
+    xpc_object_t xargs = xpc_dictionary_create_empty();
+    xpc_dictionary_set_uint64(xargs, "pid", pid);
+    xpc_dictionary_set_bool(xargs, "resume", resume);
+    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_PATCH_SPAWN, xargs);
+    if (xreply) {
+        int result = xpc_dictionary_get_int64(xreply, "result");
+        xpc_release(xreply);
+        return result;
+    }
+    return -1;
+}
+
+int jbclient_patch_exec_add(const char* exec_path, bool resume){
+    xpc_object_t xargs = xpc_dictionary_create_empty();
+    xpc_dictionary_set_string(xargs, "exec-path", exec_path);
+    xpc_dictionary_set_bool(xargs, "resume", resume);
+    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_PATCH_EXEC_ADD, xargs);
+    if (xreply) {
+        int result = xpc_dictionary_get_int64(xreply, "result");
+        xpc_release(xreply);
+        return result;
+    }
+    return -1;
+}
+
+int jbclient_patch_exec_del(const char* exec_path){
+    xpc_object_t xargs = xpc_dictionary_create_empty();
+    xpc_dictionary_set_string(xargs, "exec-path", exec_path);
+    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_PATCH_EXEC_DEL, xargs);
+    if (xreply) {
+        int result = xpc_dictionary_get_int64(xreply, "result");
+        xpc_release(xreply);
+        return result;
+    }
+    return -1;
+}
+/////////////////////////////////////////////
+
 char *jbclient_get_jbroot(void)
 {
 	static char rootPath[PATH_MAX] = { 0 };
@@ -277,52 +327,59 @@ int jbclient_cs_revalidate(void)
 	return -1;
 }
 
-int jbclient_cs_drop_get_task_allow(void){
-    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_CS_DROP_GET_TASK_ALLOW, NULL);
-    if (xreply) {
-        int result = xpc_dictionary_get_int64(xreply, "result");
-        xpc_release(xreply);
-        return result;
-    }
-    return -1;
+int jbclient_jbsettings_get(const char *key, xpc_object_t *valueOut)
+{
+	xpc_object_t xargs = xpc_dictionary_create_empty();
+	xpc_dictionary_set_string(xargs, "key", key);
+	xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_JBSETTINGS_GET, xargs);
+	xpc_release(xargs);
+	if (xreply) {
+		int result = xpc_dictionary_get_int64(xreply, "result");
+		xpc_object_t value = xpc_dictionary_get_value(xreply, "value");
+		if (value && valueOut) *valueOut = xpc_copy(value);
+		xpc_release(xreply);
+		return result;
+	}
+	return -1;
 }
 
-int jbclient_patch_spawn(int pid, bool resume){
-    xpc_object_t xargs = xpc_dictionary_create_empty();
-    xpc_dictionary_set_uint64(xargs, "pid", pid);
-    xpc_dictionary_set_bool(xargs, "resume", resume);
-    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_PATCH_SPAWN, xargs);
-    if (xreply) {
-        int result = xpc_dictionary_get_int64(xreply, "result");
-        xpc_release(xreply);
-        return result;
-    }
-    return -1;
+bool jbclient_jbsettings_get_bool(const char *key)
+{
+	xpc_object_t value;
+	if (jbclient_jbsettings_get(key, &value) == 0) {
+		if (value) {
+			bool valueBool = xpc_bool_get_value(value);
+			xpc_release(value);
+			return valueBool;
+		}
+	}
+	return false;
 }
 
-int jbclient_patch_exec_add(const char* exec_path, bool resume){
-    xpc_object_t xargs = xpc_dictionary_create_empty();
-    xpc_dictionary_set_string(xargs, "exec-path", exec_path);
-    xpc_dictionary_set_bool(xargs, "resume", resume);
-    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_PATCH_EXEC_ADD, xargs);
-    if (xreply) {
-        int result = xpc_dictionary_get_int64(xreply, "result");
-        xpc_release(xreply);
-        return result;
-    }
-    return -1;
+uint64_t jbclient_jbsettings_get_uint64(const char *key)
+{
+	xpc_object_t value;
+	if (jbclient_jbsettings_get(key, &value) == 0) {
+		if (value) {
+			uint64_t valueU64 = xpc_uint64_get_value(value);
+			xpc_release(value);
+			return valueU64;
+		}
+	}
+	return 0;
 }
 
-int jbclient_patch_exec_del(const char* exec_path){
-    xpc_object_t xargs = xpc_dictionary_create_empty();
-    xpc_dictionary_set_string(xargs, "exec-path", exec_path);
-    xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_SYSTEMWIDE, JBS_SYSTEMWIDE_PATCH_EXEC_DEL, xargs);
-    if (xreply) {
-        int result = xpc_dictionary_get_int64(xreply, "result");
-        xpc_release(xreply);
-        return result;
-    }
-    return -1;
+double jbclient_jbsettings_get_double(const char *key)
+{
+	xpc_object_t value;
+	if (jbclient_jbsettings_get(key, &value) == 0) {
+		if (value) {
+			double valueDouble = xpc_double_get_value(value);
+			xpc_release(value);
+			return valueDouble;
+		}
+	}
+	return 0;
 }
 
 int jbclient_platform_set_process_debugged(uint64_t pid, bool fullyDebugged)
@@ -357,49 +414,6 @@ int jbclient_platform_stage_jailbreak_update(const char *updateTar)
 	return -1;
 }
 
-
-int jbclient_platform_jbsettings_get(const char *key, xpc_object_t *valueOut)
-{
-	xpc_object_t xargs = xpc_dictionary_create_empty();
-	xpc_dictionary_set_string(xargs, "key", key);
-	xpc_object_t xreply = jbserver_xpc_send(JBS_DOMAIN_PLATFORM, JBS_PLATFORM_JBSETTINGS_GET, xargs);
-	xpc_release(xargs);
-	if (xreply) {
-		int result = xpc_dictionary_get_int64(xreply, "result");
-		xpc_object_t value = xpc_dictionary_get_value(xreply, "value");
-		if (value && valueOut) *valueOut = xpc_copy(value);
-		xpc_release(xreply);
-		return result;
-	}
-	return -1;
-}
-
-bool jbclient_platform_jbsettings_get_bool(const char *key)
-{
-	xpc_object_t value;
-	if (jbclient_platform_jbsettings_get(key, &value) == 0) {
-		if (value) {
-			bool valueBool = xpc_bool_get_value(value);
-			xpc_release(value);
-			return valueBool;
-		}
-	}
-	return false;
-}
-
-uint64_t jbclient_platform_jbsettings_get_uint64(const char *key)
-{
-	xpc_object_t value;
-	if (jbclient_platform_jbsettings_get(key, &value) == 0) {
-		if (value) {
-			uint64_t valueU64 = xpc_uint64_get_value(value);
-			xpc_release(value);
-			return valueU64;
-		}
-	}
-	return 0;
-}
-
 int jbclient_platform_jbsettings_set(const char *key, xpc_object_t value)
 {
 	xpc_object_t xargs = xpc_dictionary_create_empty();
@@ -426,6 +440,14 @@ int jbclient_platform_jbsettings_set_bool(const char *key, bool boolValue)
 int jbclient_platform_jbsettings_set_uint64(const char *key, uint64_t uint64Value)
 {
 	xpc_object_t value = xpc_uint64_create(uint64Value);
+	int r = jbclient_platform_jbsettings_set(key, value);
+	xpc_release(value);
+	return r;
+}
+
+int jbclient_platform_jbsettings_set_double(const char *key, double doubleValue)
+{
+	xpc_object_t value = xpc_double_create(doubleValue);
 	int r = jbclient_platform_jbsettings_set(key, value);
 	xpc_release(value);
 	return r;

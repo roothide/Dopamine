@@ -9,7 +9,7 @@
 
 all: basebin.tar
 
-subprojects: ChOma XPF opainject libjailbreak systemhook forkfix launchdhook boomerang jbctl idownloadd watchdoghook rootlesshooks libroot
+subprojects: ChOma XPF opainject libjailbreak systemhook forkfix launchdhook boomerang jbctl idownloadd watchdoghook rootlesshooks
 
 ChOma: .build .include
 	@$(MAKE) -C ChOma TARGET=ios DISABLE_SIGNING=1 DISABLE_TESTS=1 DYLIB_LDFLAGS="-install_name @loader_path/libchoma.dylib"
@@ -61,20 +61,15 @@ watchdoghook: .build .include libjailbreak
 	@cp watchdoghook/watchdoghook.dylib .build
 
 rootlesshooks: .build .include libjailbreak
-	$(MAKE) -C rootlesshooks
-	@cp rootlesshooks/.theos/obj/rootlesshooks.dylib .build
-
-libroot: .build .include libjailbreak
-	@$(MAKE) -C ../Packages/libroot all
-	@cp ../Packages/libroot/libroot.dylib .build
-
+	$(MAKE) -C roothidehooks
+	@cp roothidehooks/.theos/obj/roothidehooks.dylib .build
 
 .build:
 	rm -rf .build
 	mkdir -p .build
 	cp -r _external/basebin/* .build
 	cp _external/basebin/.version .build
-	echo "$(COMMIT_HASH)" > .build/.version
+	echo "$(shell git -C .. describe --tags --abbrev=0 | grep -E '^[0-9]+$$' || echo 0)" > .build/.version
 
 .include:
 	rm -rf .include
@@ -104,11 +99,10 @@ clean:
 	@$(MAKE) -C jbctl $@
 	@$(MAKE) -C idownloadd $@
 	@$(MAKE) -C watchdoghook $@
-	@$(MAKE) -C rootlesshooks $@
-	@$(MAKE) -C ../Packages/libroot clean
+	@$(MAKE) -C roothidehooks $@
 	@rm -rf .build
 	@rm -rf .include
 	@rm -rf basebin.tar
 	@rm -rf basebin.tc
 
-.PHONY: clean .build .include ChOma XPF opainject libjailbreak systemhook forkfix launchdhook boomerang jbctl idownloadd watchdoghook rootlesshooks libroot basebin.tc basebin.tar
+.PHONY: clean .build .include ChOma XPF opainject libjailbreak systemhook forkfix launchdhook boomerang jbctl idownloadd watchdoghook rootlesshooks basebin.tc basebin.tar

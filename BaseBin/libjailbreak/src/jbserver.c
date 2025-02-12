@@ -1,7 +1,8 @@
 #include "jbserver.h"
+#include "util.h"
+
 #include "deny.h"
 #include <libproc.h>
-#include "util.h"
 
 int jbserver_received_xpc_message(struct jbserver_impl *server, xpc_object_t xmsg)
 {
@@ -20,14 +21,15 @@ int jbserver_received_xpc_message(struct jbserver_impl *server, xpc_object_t xms
 
 	audit_token_t clientToken = { 0 };
 	xpc_dictionary_get_audit_token(xmsg, &clientToken);
-    pid_t pid = audit_token_to_pid(clientToken);
-    char callerPath[4 * MAXPATHLEN];
-    if (proc_pidpath(pid, callerPath, sizeof(callerPath)) < 0) {
-        return -1;
-    }
-    if (isBlacklisted(callerPath)){
-        return -1;
-    }
+
+	pid_t pid = audit_token_to_pid(clientToken);
+	char callerPath[4 * MAXPATHLEN]; /* proc_pidpath is not always reliable, 
+	it will return ENOENT if the original executable file of a running process is removed from disk (e.g.  upgrading/reinstalling a package) */
+	if (proc_pidpath(pid, callerPath, sizeof(callerPath)) > 0) {
+		if (isBlacklisted(callerPath)) {
+			return -1;
+		}
+	}
 
 	if (domain->permissionHandler) {
 		if (!domain->permissionHandler(clientToken)) return -2;
@@ -75,7 +77,7 @@ int jbserver_received_xpc_message(struct jbserver_impl *server, xpc_object_t xms
 				break;
 				case JBS_TYPE_CALLER_TOKEN:
 				args[i] = (void *)&clientToken;
-                break;
+				break;
 			}
 		}
 		else {

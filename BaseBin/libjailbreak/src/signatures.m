@@ -1,18 +1,10 @@
 #include <choma/FAT.h>
 #include <choma/MachO.h>
 #include <choma/Host.h>
-#include <choma/MachOByteOrder.h>
-#include <choma/CodeDirectory.h>
 #include <mach-o/dyld.h>
 #include "trustcache.h"
-#include "log.h"
-#include "util.h"
-#include <libgen.h>
 
 #import <Foundation/Foundation.h>
-
-extern CS_DecodedBlob *csd_superblob_find_best_code_directory(CS_DecodedSuperBlob *decodedSuperblob);
-extern bool csd_code_directory_calculate_page_hash(CS_DecodedBlob *codeDirBlob, MachO *macho, int slot, uint8_t *pageHashOut);
 
 MachO *ljb_fat_find_preferred_slice(FAT *fat)
 {
@@ -57,6 +49,16 @@ bool csd_superblob_is_adhoc_signed(CS_DecodedSuperBlob *superblob)
 	}
 	return true;
 }
+
+
+#include <choma/MachOByteOrder.h>
+#include <choma/CodeDirectory.h>
+#include <libgen.h>
+#include "util.h"
+#include "log.h"
+
+extern CS_DecodedBlob *csd_superblob_find_best_code_directory(CS_DecodedSuperBlob *decodedSuperblob);
+extern bool csd_code_directory_calculate_page_hash(CS_DecodedBlob *codeDirBlob, MachO *macho, int slot, uint8_t *pageHashOut);
 
 FAT *fat_init_for_writing(const char *filePath)
 {
@@ -288,6 +290,63 @@ int ensure_randomized_cdhash(const char* inputPath, void* cdhashOut)
 	return retval;
 }
 
+void ensure_jbroot_symlink(const char* filepath)
+{
+	JBLogDebug("ensure_jbroot_symlink: %s", filepath);
+
+	if(access(filepath, F_OK) !=0 )
+		return;
+
+	char realfpath[PATH_MAX];
+	assert(realpath(filepath, realfpath) != NULL);
+
+	char realdirpath[PATH_MAX+1];
+	dirname_r(realfpath, realdirpath);
+	if(realdirpath[strlen(realdirpath)] != '/') strcat(realdirpath, "/");
+
+	char jbrootpath[PATH_MAX+1];
+	assert(realpath(JBROOT_PATH("/"), jbrootpath) != NULL);
+	if(jbrootpath[strlen(jbrootpath)] != '/') strcat(jbrootpath, "/");
+
+	JBLogDebug("%s : %s", realdirpath, jbrootpath);
+
+	if(strncmp(realdirpath, jbrootpath, strlen(jbrootpath)) != 0) 
+		return;
+
+	struct stat jbrootst;
+	assert(stat(jbrootpath, &jbrootst) == 0);
+	
+	char sympath[PATH_MAX];
+	snprintf(sympath,sizeof(sympath),"%s/.jbroot", realdirpath);
+
+	struct stat symst;
+	if(lstat(sympath, &symst)==0)
+	{
+		if(S_ISLNK(symst.st_mode))
+		{
+			if(stat(sympath, &symst) == 0)
+			{
+				if(symst.st_dev==jbrootst.st_dev 
+					&& symst.st_ino==jbrootst.st_ino)
+					return;
+			}
+
+			assert(unlink(sympath) == 0);
+			
+		} else {
+			//not a symlink? just let it go
+			return;
+		}
+	}
+
+	if(symlink(jbrootpath, sympath) ==0 ) {
+		JBLogError("update .jbroot @ %s\n", sympath);
+	} else {
+		JBLogError("symlink error @ %s\n", sympath);
+	}
+}
+/////////////////////////////////////////////////////////
+
 NSString *resolveDependencyPath(NSString *dylibPath, NSString *sourceImagePath, NSString *sourceExecutablePath)
 {
 	@autoreleasepool {
@@ -349,62 +408,6 @@ NSString *resolveDependencyPath(NSString *dylibPath, NSString *sourceImagePath, 
 		}
 		
 		return nil;
-	}
-}
-
-void ensure_jbroot_symlink(const char* filepath)
-{
-	JBLogDebug("ensure_jbroot_symlink: %s", filepath);
-
-	if(access(filepath, F_OK) !=0 )
-		return;
-
-	char realfpath[PATH_MAX];
-	assert(realpath(filepath, realfpath) != NULL);
-
-	char realdirpath[PATH_MAX];
-	dirname_r(realfpath, realdirpath);
-	if(realdirpath[strlen(realdirpath)] != '/') strcat(realdirpath, "/");
-
-	char jbrootpath[PATH_MAX];
-	assert(realpath(JBRootPath("/"), jbrootpath) != NULL);
-	if(jbrootpath[strlen(jbrootpath)] != '/') strcat(jbrootpath, "/");
-
-	JBLogDebug("%s : %s", realdirpath, jbrootpath);
-
-	if(strncmp(realdirpath, jbrootpath, strlen(jbrootpath)) != 0) 
-		return;
-
-	struct stat jbrootst;
-	assert(stat(jbrootpath, &jbrootst) == 0);
-	
-	char sympath[PATH_MAX];
-	snprintf(sympath,sizeof(sympath),"%s/.jbroot", realdirpath);
-
-	struct stat symst;
-	if(lstat(sympath, &symst)==0)
-	{
-		if(S_ISLNK(symst.st_mode))
-		{
-			if(stat(sympath, &symst) == 0)
-			{
-				if(symst.st_dev==jbrootst.st_dev 
-					&& symst.st_ino==jbrootst.st_ino)
-					return;
-			}
-
-			assert(unlink(sympath) == 0);
-			
-		} else {
-			//not a symlink? just let it go
-			return;
-		}
-	}
-
-	if(symlink(jbrootpath, sympath) ==0 ) {
-		JBLogError("update .jbroot @ %s\n", sympath);
-	} else {
-		JBLogError("symlink error @ %s\n", sympath);
 	}
 }
 

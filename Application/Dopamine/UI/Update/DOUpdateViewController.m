@@ -95,7 +95,43 @@
 
     BOOL envUpdate = [[DOUIManager sharedInstance] environmentUpdateAvailable];
     
-    self.button = [DOActionMenuButton buttonWithAction:[UIAction actionWithTitle:DOLocalizedString(envUpdate ? @"Button_Reboot_Device" : @"Button_Update") image:[UIImage systemImageNamed:(envUpdate ? @"arrow.clockwise.circle" : @"arrow.down") withConfiguration:[DOGlobalAppearance smallIconImageConfiguration]] identifier:@"update" handler:^(__kindof UIAction * _Nonnull action) {
+/*
+    self.button = [DOActionMenuButton buttonWithAction:[UIAction actionWithTitle:DOLocalizedString(envUpdate ? @"Button_Update_Environment" : @"Button_Update") image:[UIImage systemImageNamed:@"arrow.down" withConfiguration:[DOGlobalAppearance smallIconImageConfiguration]] identifier:@"update" handler:^(__kindof UIAction * _Nonnull action) {
+        if (envUpdate)
+        {
+            self.button.enabled = NO;
+            self.button.alpha = 0.5;
+            NSError *error = [[DOEnvironmentManager sharedManager] updateEnvironment];
+            if (error)
+            {
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Error Updating Basebin" message:error.localizedDescription preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Close") style:UIAlertActionStyleDefault handler:nil]];
+                [self presentViewController:alert animated:YES completion:nil];
+            }
+            return;
+        }
+
+        if (![DOEnvironmentManager sharedManager].isJailbroken || [[DOUIManager sharedInstance] launchedReleaseNeedsManualUpdate] || ![DOEnvironmentManager sharedManager].isInstalledThroughTrollStore)
+        {
+            if ([DOEnvironmentManager sharedManager].isInstalledThroughTrollStore) {
+                LSApplicationProxy *tsAppProxy = [LSApplicationProxy applicationProxyForIdentifier:@"com.opa334.TrollStore"];
+                if ([tsAppProxy.claimedURLSchemes containsObject:@"apple-magnifier"]) {
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:[@"apple-magnifier://install?url=" stringByAppendingString:self.lastestDownloadUrl]] options:@{} completionHandler:nil];
+                    return;
+                }
+            }
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/opa334/Dopamine/releases"] options:@{} completionHandler:nil];
+            return;
+        }
+
+        DODownloadViewController *downloadVC = [[DODownloadViewController alloc] initWithUrl:self.lastestDownloadUrl callback:^(NSURL * _Nonnull file) {
+            NSLog(@"Downloaded %@", file);
+            [[DOEnvironmentManager sharedManager] updateJailbreakFromTIPA:file.path];
+        }];
+        [(UINavigationController*)(self.parentViewController) pushViewController:downloadVC animated:YES];
+    }] chevron:NO];
+ */
+    self.button = [DOActionMenuButton buttonWithAction:[UIAction actionWithTitle:DOLocalizedString(envUpdate ? @"Button_Reboot" : @"Button_Update") image:[UIImage systemImageNamed:(envUpdate ? @"arrow.clockwise.circle" : @"arrow.down") withConfiguration:[DOGlobalAppearance smallIconImageConfiguration]] identifier:@"update" handler:^(__kindof UIAction * _Nonnull action) {
         if (envUpdate)
         {
             [[DOEnvironmentManager sharedManager] reboot];
@@ -150,7 +186,7 @@
         NSDictionary *release = (NSDictionary*)obj;
         NSString *name = release[@"name"];
         NSString *body = release[@"body"];
-        [changelogText appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"Version %@\n", name] attributes:@{NSFontAttributeName: [UIFont boldSystemFontOfSize:18], NSForegroundColorAttributeName : [UIColor whiteColor], NSParagraphStyleAttributeName:paragraphStyle}]];
+        [changelogText appendAttributedString:[[NSAttributedString alloc] initWithString:[NSString stringWithFormat:@"%@\n", name] attributes:@{NSFontAttributeName: [UIFont boldSystemFontOfSize:18], NSForegroundColorAttributeName : [UIColor whiteColor], NSParagraphStyleAttributeName:paragraphStyle}]];
         [changelogText appendAttributedString:[[NSAttributedString alloc] initWithString:@"\n"]];
         
         NSAttributedStringMarkdownParsingOptions *parsingOptions = [[NSAttributedStringMarkdownParsingOptions alloc] init];

@@ -3,12 +3,14 @@
 #import "util.h"
 #import <sys/stat.h>
 
-NSString *NSJBRootPath(NSString *relativePath)
+/*
+NSString *NSPrebootUUIDPath(NSString *relativePath)
 {
 	@autoreleasepool {
-		return [[NSString stringWithUTF8String:jbinfo(rootPath)] stringByAppendingPathComponent:relativePath];
+		return [NSString stringWithUTF8String:prebootUUIDPath(relativePath.UTF8String)];
 	}
 }
+*/
 
 void _JBFixMobilePermissionsOfDirectory(NSString *directoryPath, BOOL recursive)
 {
@@ -36,21 +38,21 @@ void _JBFixMobilePermissionsOfDirectory(NSString *directoryPath, BOOL recursive)
 void JBFixMobilePermissions(void)
 {
 	@autoreleasepool {
-		NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:NSJBRootPath(@"/var") error:nil];
+		NSDictionary *attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:JBROOT_PATH(@"/var") error:nil];
 		if ([attributes[NSFileType] isEqualToString:NSFileTypeSymbolicLink]) {
 			// /var/jb/var is a symlink, abort
 			return;
 		}
-		attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:NSJBRootPath(@"/var/mobile") error:nil];
+		attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:JBROOT_PATH(@"/var/mobile") error:nil];
 		if ([attributes[NSFileType] isEqualToString:NSFileTypeSymbolicLink]) {
 			// /var/jb/var/mobile is a symlink, abort
 			return;
 		}
 
-		_JBFixMobilePermissionsOfDirectory(NSJBRootPath(@"/var/mobile"), NO);
-		_JBFixMobilePermissionsOfDirectory(NSJBRootPath(@"/var/mobile/Library"), NO);
-		_JBFixMobilePermissionsOfDirectory(NSJBRootPath(@"/var/mobile/Library/SplashBoard"), YES);
-		_JBFixMobilePermissionsOfDirectory(NSJBRootPath(@"/var/mobile/Library/Application Support"), YES);
-		_JBFixMobilePermissionsOfDirectory(NSJBRootPath(@"/var/mobile/Library/Preferences"), YES);
+		_JBFixMobilePermissionsOfDirectory(JBROOT_PATH(@"/var/mobile"), NO);
+		_JBFixMobilePermissionsOfDirectory(JBROOT_PATH(@"/var/mobile/Library"), NO);
+		_JBFixMobilePermissionsOfDirectory(JBROOT_PATH(@"/var/mobile/Library/SplashBoard"), YES);
+		_JBFixMobilePermissionsOfDirectory(JBROOT_PATH(@"/var/mobile/Library/Application Support"), YES);
+		_JBFixMobilePermissionsOfDirectory(JBROOT_PATH(@"/var/mobile/Library/Preferences"), YES);
 	}
 }

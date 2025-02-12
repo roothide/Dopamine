@@ -12,4 +12,6 @@ Application/Payload
 Tools/fastPathSign/.build_*
 Exploits/kfd/kfd.framework/kfd
 cmake-build-*
+.vscode
+jbupdate.sh
 BaseBin/jbupdate.sh

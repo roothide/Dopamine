@@ -1,4 +1,5 @@
 #include "jbserver_global.h"
+#include "jbsettings.h"
 #include <libjailbreak/info.h>
 #include <sandbox.h>
 #include <libproc.h>
@@ -10,36 +11,52 @@
 #include <libjailbreak/util.h>
 #include <libjailbreak/primitives.h>
 #include <libjailbreak/codesign.h>
-#include <signal.h>
 
+extern bool string_has_prefix(const char *str, const char* prefix);
+extern bool string_has_suffix(const char* str, const char* suffix);
+
+/*
+char *combine_strings(char separator, char **components, int count)
+{
+	if (count <= 0) return NULL;
+
+	bool isFirst = true;
+
+	size_t outLength = 1;
+	for (int i = 0; i < count; i++) {
+		if (components[i]) {
+			outLength += !isFirst + strlen(components[i]);
+			if (isFirst) isFirst = false;
+		}
+	}
+
+	isFirst = true;
+	char *outString = malloc(outLength * sizeof(char));
+	*outString = 0;
+
+	for (int i = 0; i < count; i++) {
+		if (components[i]) {
+			if (isFirst) {
+				strlcpy(outString, components[i], outLength);
+				isFirst = false;
+			}
+			else {
+				char separatorString[2] = { separator, 0 };
+				strlcat(outString, (char *)separatorString, outLength);
+				strlcat(outString, components[i], outLength);
+			}
+		}
+	}
+
+	return outString;
+}
+*/
+
+#include <signal.h>
 #include "exec_patch.h"
 #include "libjailbreak/log.h"
 
-extern bool stringStartsWith(const char *str, const char* prefix);
-extern bool stringEndsWith(const char* str, const char* suffix);
-
-#define APP_PATH_PREFIX "/private/var/containers/Bundle/Application/"
-
-static bool is_app_path(const char* path)
-{
-    if(!path) return false;
-
-    char rp[PATH_MAX];
-    if(!realpath(path, rp)) return false;
-
-    if(strncmp(rp, APP_PATH_PREFIX, sizeof(APP_PATH_PREFIX)-1) != 0)
-        return false;
-
-    char* p1 = rp + sizeof(APP_PATH_PREFIX)-1;
-    char* p2 = strchr(p1, '/');
-    if(!p2) return false;
-
-    //is normal app or jailbroken app/daemon?
-    if((p2 - p1) != (sizeof("xxxxxxxx-xxxx-xxxx-yxxx-xxxxxxxxxxxx")-1))
-        return false;
-
-	return true;
-}
+extern bool gFirstLoad;
 
 bool is_sub_path(const char* parent, const char* child)
 {
@@ -49,11 +66,40 @@ bool is_sub_path(const char* parent, const char* child)
 	if(!realpath(child, real_child)) return false;
 	if(!realpath(parent, real_parent)) return false;
 
-	if(!stringStartsWith(real_child, real_parent))
+	if(!string_has_prefix(real_child, real_parent))
 		return false;
 
 	return real_child[strlen(real_parent)] == '/';
 }
+
+char* generate_sandbox_extensions(audit_token_t *processToken, bool writable)
+{
+    char* sandboxExtensionsOut=NULL;
+    char jbrootbase[PATH_MAX];
+    char jbrootsecondary[PATH_MAX];
+    snprintf(jbrootbase, sizeof(jbrootbase), "/private/var/containers/Bundle/Application/.jbroot-%016llX/", jbinfo(jbrand));
+    snprintf(jbrootsecondary, sizeof(jbrootsecondary), "/private/var/mobile/Containers/Shared/AppGroup/.jbroot-%016llX/", jbinfo(jbrand));
+
+    char* fileclass = writable ? "com.apple.app-sandbox.read-write" : "com.apple.app-sandbox.read";
+
+    char *readExtension = sandbox_extension_issue_file_to_process("com.apple.app-sandbox.read", jbrootbase, 0, *processToken);
+    char *execExtension = sandbox_extension_issue_file_to_process("com.apple.sandbox.executable", jbrootbase, 0, *processToken);
+    char *readExtension2 = sandbox_extension_issue_file_to_process(fileclass, jbrootsecondary, 0, *processToken);
+    if (readExtension && execExtension && readExtension2) {
+        char extensionBuf[strlen(readExtension) + 1 + strlen(execExtension) + strlen(readExtension2) + 1];
+        strcat(extensionBuf, readExtension);
+        strcat(extensionBuf, "|");
+        strcat(extensionBuf, execExtension);
+        strcat(extensionBuf, "|");
+        strcat(extensionBuf, readExtension2);
+        sandboxExtensionsOut = strdup(extensionBuf);
+    }
+    if (readExtension) free(readExtension);
+    if (execExtension) free(execExtension);
+    if (readExtension2) free(readExtension2);
+    return sandboxExtensionsOut;
+}
+/////////////////////////////////////////////////////////////////
 
 static bool systemwide_domain_allowed(audit_token_t clientToken)
 {
@@ -128,34 +174,6 @@ static int systemwide_trust_library(audit_token_t *processToken, const char *lib
 	return trust_file(libraryPath, callerLibraryPath, callerPath, NULL);
 }
 
-char* generate_sandbox_extensions(audit_token_t *processToken, bool writable)
-{
-	char* sandboxExtensionsOut=NULL;
-	char jbrootbase[PATH_MAX];
-	char jbrootsecondary[PATH_MAX];
-	snprintf(jbrootbase, sizeof(jbrootbase), "/private/var/containers/Bundle/Application/.jbroot-%016llX/", jbinfo(jbrand));
-	snprintf(jbrootsecondary, sizeof(jbrootsecondary), "/private/var/mobile/Containers/Shared/AppGroup/.jbroot-%016llX/", jbinfo(jbrand));
-
-	char* fileclass = writable ? "com.apple.app-sandbox.read-write" : "com.apple.app-sandbox.read";
-
-	char *readExtension = sandbox_extension_issue_file_to_process("com.apple.app-sandbox.read", jbrootbase, 0, *processToken);
-	char *execExtension = sandbox_extension_issue_file_to_process("com.apple.sandbox.executable", jbrootbase, 0, *processToken);
-	char *readExtension2 = sandbox_extension_issue_file_to_process(fileclass, jbrootsecondary, 0, *processToken);
-	if (readExtension && execExtension && readExtension2) {
-		char extensionBuf[strlen(readExtension) + 1 + strlen(execExtension) + strlen(readExtension2) + 1];
-		strcat(extensionBuf, readExtension);
-		strcat(extensionBuf, "|");
-		strcat(extensionBuf, execExtension);
-		strcat(extensionBuf, "|");
-		strcat(extensionBuf, readExtension2);
-		sandboxExtensionsOut = strdup(extensionBuf);
-	}
-	if (readExtension) free(readExtension);
-	if (execExtension) free(execExtension);
-	if (readExtension2) free(readExtension2);
-	return sandboxExtensionsOut;
-}
-
 static int systemwide_process_checkin(audit_token_t *processToken, char **rootPathOut, char **bootUUIDOut, char **sandboxExtensionsOut, bool *fullyDebuggedOut)
 {
 	// Fetch process info
@@ -175,7 +193,33 @@ static int systemwide_process_checkin(audit_token_t *processToken, char **rootPa
 	systemwide_get_jbroot(rootPathOut);
 	systemwide_get_boot_uuid(bootUUIDOut);
 
+/*
+	// Generate sandbox extensions for the requesting process
+	char *sandboxExtensionsArr[] = {
+		// Make /var/jb readable and executable
+		sandbox_extension_issue_file_to_process("com.apple.app-sandbox.read", JBROOT_PATH(""), 0, *processToken),
+		sandbox_extension_issue_file_to_process("com.apple.sandbox.executable", JBROOT_PATH(""), 0, *processToken),
 
+		// Make /var/jb/var/mobile writable
+		sandbox_extension_issue_file_to_process("com.apple.app-sandbox.read-write", JBROOT_PATH("/var/mobile"), 0, *processToken),
+	};
+	int sandboxExtensionsCount = sizeof(sandboxExtensionsArr) / sizeof(char *);
+	*sandboxExtensionsOut = combine_strings('|', sandboxExtensionsArr, sandboxExtensionsCount);
+	for (int i = 0; i < sandboxExtensionsCount; i++) {
+		if (sandboxExtensionsArr[i]) {
+			free(sandboxExtensionsArr[i]);
+		}
+	}
+
+	bool fullyDebugged = false;
+	if (string_has_prefix(procPath, "/private/var/containers/Bundle/Application") || string_has_prefix(procPath, JBROOT_PATH("/Applications"))) {
+		// This is an app, enable CS_DEBUGGED based on user preference
+		if (jbsetting(markAppsAsDebugged)) {
+			fullyDebugged = true;
+		}
+	}
+	*fullyDebuggedOut = fullyDebugged;
+/*/
 	struct statfs fs;
 	bool isPlatformProcess = statfs(procPath, &fs)==0 && strcmp(fs.f_mntonname, "/private/var") != 0;
 
@@ -183,13 +227,15 @@ static int systemwide_process_checkin(audit_token_t *processToken, char **rootPa
 	*sandboxExtensionsOut = generate_sandbox_extensions(processToken, isPlatformProcess);
 
 	bool fullyDebugged = false;
-	if (is_app_path(procPath) || is_sub_path(JBRootPath("/Applications"), procPath)) {
+	bool is_app_path(const char* path);
+	if (is_app_path(procPath) || is_sub_path(JBROOT_PATH("/Applications"), procPath)) {
 		// This is an app, enable CS_DEBUGGED based on user preference
 		if (jbsetting(markAppsAsDebugged)) {
 			fullyDebugged = true;
 		}
 	}
 	*fullyDebuggedOut = fullyDebugged;
+
 	
 	// Allow invalid pages
 	cs_allow_invalid(proc, fullyDebugged);
@@ -244,22 +290,22 @@ static int systemwide_process_checkin(audit_token_t *processToken, char **rootPa
 	}
 	// For the Dopamine app itself we want to give it a saved uid/gid of 0, unsandbox it and give it CS_PLATFORM_BINARY
 	// This is so that the buttons inside it can work when jailbroken, even if the app was not installed by TrollStore
-	else if (stringEndsWith(procPath, "/Dopamine.app/Dopamine")) {
-		char roothidefile[PATH_MAX];
-		snprintf(roothidefile, sizeof(roothidefile), "%s.roothide",procPath);
-		if(access(roothidefile, F_OK)==0) {
-			// svuid = 0, svgid = 0
-			uint64_t ucred = proc_ucred(proc);
-			kwrite32(proc + koffsetof(proc, svuid), 0);
-			kwrite32(ucred + koffsetof(ucred, svuid), 0);
-			kwrite32(proc + koffsetof(proc, svgid), 0);
-			kwrite32(ucred + koffsetof(ucred, svgid), 0);
+	else if (string_has_suffix(procPath, "/Dopamine.app/Dopamine")) {
+char roothidefile[PATH_MAX];
+snprintf(roothidefile, sizeof(roothidefile), "%s.roothide",procPath);
+if(access(roothidefile, F_OK)==0 && !gFirstLoad) {
+		// svuid = 0, svgid = 0
+		uint64_t ucred = proc_ucred(proc);
+		kwrite32(proc + koffsetof(proc, svuid), 0);
+		kwrite32(ucred + koffsetof(ucred, svuid), 0);
+		kwrite32(proc + koffsetof(proc, svgid), 0);
+		kwrite32(ucred + koffsetof(ucred, svgid), 0);
 
-			// platformize
-			proc_csflags_set(proc, CS_PLATFORM_BINARY);
-		} else {
-			kill(pid, SIGKILL);
-		}
+		// platformize
+		proc_csflags_set(proc, CS_PLATFORM_BINARY);
+} else {
+	kill(pid, SIGKILL);
+}
 	}
 
 #ifdef __arm64e__
@@ -305,11 +351,11 @@ static int systemwide_fork_fix(audit_token_t *parentToken, uint64_t childPid)
 			uint64_t parentTask  = proc_task(parentProc);
 			uint64_t parentVmMap = kread_ptr(parentTask + koffsetof(task, map));
 
-			uint64_t parentHeader     = kread_ptr(parentVmMap  + koffsetof(vm_map, hdr));
-			uint64_t parentEntry      = kread_ptr(parentHeader + koffsetof(vm_map_header, links) + koffsetof(vm_map_links, next));
+			uint64_t parentHeader = kread_ptr(parentVmMap  + koffsetof(vm_map, hdr));
+			uint64_t parentEntry  = kread_ptr(parentHeader + koffsetof(vm_map_header, links) + koffsetof(vm_map_links, next));
 
-			uint64_t childHeader     = kread_ptr(childVmMap + koffsetof(vm_map, hdr));
-			uint64_t childEntry      = kread_ptr(childHeader + koffsetof(vm_map_header, links) + koffsetof(vm_map_links, next));
+			uint64_t childHeader  = kread_ptr(childVmMap  + koffsetof(vm_map, hdr));
+			uint64_t childEntry   = kread_ptr(childHeader + koffsetof(vm_map_header, links) + koffsetof(vm_map_links, next));
 
 			uint64_t childFirstEntry = childEntry, parentFirstEntry = parentEntry;
 			do {
@@ -329,7 +375,7 @@ static int systemwide_fork_fix(audit_token_t *parentToken, uint64_t childPid)
 					uint64_t childFlags  = kread64(childEntry  + koffsetof(vm_map_entry, flags));
 
 					uint8_t parentProt = VM_FLAGS_GET_PROT(parentFlags), parentMaxProt = VM_FLAGS_GET_MAXPROT(parentFlags);
-					uint8_t childProt =  VM_FLAGS_GET_PROT(childFlags),  childMaxProt  = VM_FLAGS_GET_MAXPROT(childFlags);
+					uint8_t childProt  = VM_FLAGS_GET_PROT(childFlags),  childMaxProt  = VM_FLAGS_GET_MAXPROT(childFlags);
 
 					if (parentProt != childProt || parentMaxProt != childMaxProt) {
 						VM_FLAGS_SET_PROT(childFlags, parentProt);
@@ -338,7 +384,7 @@ static int systemwide_fork_fix(audit_token_t *parentToken, uint64_t childPid)
 					}
 
 					parentEntry = kread_ptr(parentEntry + koffsetof(vm_map_entry, links) + koffsetof(vm_map_links, next));
-					childEntry = kread_ptr(childEntry + koffsetof(vm_map_entry, links) + koffsetof(vm_map_links, next));
+					childEntry  = kread_ptr(childEntry  + koffsetof(vm_map_entry, links) + koffsetof(vm_map_links, next));
 				}
 			} while (parentEntry != 0 && childEntry != 0 && parentEntry != parentFirstEntry && childEntry != childFirstEntry);
 			retval = 0;
@@ -480,6 +526,14 @@ struct jbserver_domain gSystemwideDomain = {
 			.args = (jbserver_arg[]) {
 				{ .name = "caller-token", .type = JBS_TYPE_CALLER_TOKEN, .out = false },
 				{ 0 },
+			},
+		},
+		// JBS_SYSTEMWIDE_JBSETTINGS_GET
+		{
+			.handler = jbsettings_get,
+			.args = (jbserver_arg[]){
+				{ .name = "key", .type = JBS_TYPE_STRING, .out = false },
+				{ .name = "value", .type = JBS_TYPE_XPC_GENERIC, .out = true },
 			},
 		},
         // JBS_SYSTEMWIDE_CS_DROP_GET_TASK_ALLOW

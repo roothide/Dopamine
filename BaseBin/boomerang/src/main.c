@@ -8,6 +8,7 @@
 #include <libjailbreak/kcall_Fugu14.h>
 #include <libjailbreak/kcall_arm64.h>
 #include <libjailbreak/jbserver_boomerang.h>
+
 #include <errno.h>
 #include <libproc.h>
 #include <libproc_private.h>
@@ -99,8 +100,8 @@ int main(int argc, char* argv[])
 	// Send done message to launchd
 	jbclient_boomerang_done();
 
-    // give launchd GET_TASK_ALLOW
-    unrestrict(1, proc_csflags_patch, true);
+	// give launchd GET_TASK_ALLOW
+	unrestrict(1, proc_csflags_patch, true);
 
 	// Now make our server run so that launchd can get everything back
 	dispatch_main();

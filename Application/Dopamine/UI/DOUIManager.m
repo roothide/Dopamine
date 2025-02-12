@@ -63,6 +63,27 @@
     return updates;
 }
 
+/*
+- (NSArray *)getLatestReleases
+{
+    static dispatch_once_t onceToken;
+    static NSArray *releases;
+    dispatch_once(&onceToken, ^{
+        NSURL *url = [NSURL URLWithString:@"https://api.github.com/repos/opa334/Dopamine/releases"];
+        NSData *data = [NSData dataWithContentsOfURL:url];
+        if (data) {
+            NSError *error;
+            releases = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
+            if (error)
+            {
+                onceToken = 0;
+                releases = @[];
+            }
+        }
+    });
+    return releases;
+}
+*/
 - (NSArray *)getLatestReleases
 {
     static NSLock* reqLock=nil;
@@ -106,6 +127,7 @@
         NSMutableDictionary* newcommit = [tags[0] mutableCopy];
         newcommit[@"tag_name"] = tags[0][@"name"];
         newcommit[@"body"] = commit[@"commit"][@"message"];
+        newcommit[@"name"] = [NSString stringWithFormat:@"Version %@", newcommit[@"tag_name"]];
         newcommit[@"assets"] = @[@{@"browser_download_url":@"https://github.com/roothide/Dopamine2-roothide"}];
         releases = @[newcommit.copy];
         
@@ -157,7 +179,7 @@
 
 - (NSString*)getLaunchedReleaseTag
 {
-    return [DOEnvironmentManager.sharedManager nightlyHash];
+    return [[[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"] componentsSeparatedByString:@"."] lastObject];
 }
 
 - (NSArray*)availablePackageManagers
@@ -237,8 +259,6 @@
 
 - (void)sendLog:(NSString*)log debug:(BOOL)debug update:(BOOL)update
 {
-    // NSLog(@"sendLog: %@", log);
-    
     if (!self.logView || !log)
         return;
 

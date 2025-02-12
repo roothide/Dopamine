@@ -156,16 +156,16 @@ struct jbserver_domain gRootDomain = {
 				{ 0 },
 			},
 		},
-
-		// disbaled // JBS_ROOT_ADD_CDHASH
-		// {
-		// 	.handler = root_trustcache_add_cdhash,
-		// 	.args = (jbserver_arg[]){
-		// 		{ .name = "cdhash", .type = JBS_TYPE_DATA, .out = false },
-		// 		{ 0 },
-		// 	},
-		// },
-
+/*
+		// JBS_ROOT_ADD_CDHASH
+		{
+			.handler = root_trustcache_add_cdhash,
+			.args = (jbserver_arg[]){
+				{ .name = "cdhash", .type = JBS_TYPE_DATA, .out = false },
+				{ 0 },
+			},
+		},
+*/
 		// JBS_ROOT_TRUSTCACHE_CLEAR
 		{
 			.handler = root_trustcache_clear,

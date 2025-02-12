@@ -17,6 +17,7 @@
 #import "DOPSExploitListItemsController.h"
 #import "DOThemeManager.h"
 #import "DOSceneDelegate.h"
+#import "DOPSJetsamListItemsController.h"
 
 
 @interface DOSettingsController ()
@@ -113,6 +114,32 @@
 - (NSArray *)themeNames
 {
     return [[DOThemeManager sharedInstance] getAvailableThemeNames];
+}
+
+- (NSArray *)jetsamOptionNumbers
+{
+    return @[
+    @2,
+    @3,
+    @4,
+    @5,
+    @6,
+    @7,
+    @8,
+    ];
+}
+
+- (NSArray *)jetsamOptionTitles
+{
+    return @[
+        @"1x",
+        @"1.5x",
+        @"2x",
+        @"2.5x",
+        [NSString stringWithFormat:@"3x (%@)", DOLocalizedString(@"Recommended")],
+        @"3.5x",
+        @"4x",
+    ];
 }
 
 - (id)specifiers
@@ -213,8 +240,17 @@
             [appJitSpecifier setProperty:@YES forKey:@"default"];
             [specifiers addObject:appJitSpecifier];
             
+            PSSpecifier *jetsamSpecifier = [PSSpecifier preferenceSpecifierNamed:DOLocalizedString(@"Settings_Jetsam_Multiplier") target:self set:@selector(setJetsamMultiplier:specifier:) get:@selector(readJetsamMultiplier:) detail:nil cell:PSLinkListCell edit:nil];
+            [jetsamSpecifier setProperty:@YES forKey:@"enabled"];
+            [jetsamSpecifier setProperty:@"jetsamMultiplier" forKey:@"key"];
+            [jetsamSpecifier setProperty:@6 forKey:@"default"];
+            jetsamSpecifier.detailControllerClass = [DOPSJetsamListItemsController class];
+            [jetsamSpecifier setProperty:@"jetsamOptionNumbers" forKey:@"valuesDataSource"];
+            [jetsamSpecifier setProperty:@"jetsamOptionTitles" forKey:@"titlesDataSource"];
+            [specifiers addObject:jetsamSpecifier];
+            
             if (@available(iOS 16.0, *)) {
-                if (envManager.isJailbroken && !jbclient_platform_jbsettings_get_bool("DevMode")) {
+                if (envManager.isJailbroken && !jbclient_jbsettings_get_bool("DevMode")) {
                     PSSpecifier *devmodeSpecifier = [PSSpecifier preferenceSpecifierNamed:DOLocalizedString(@"Settings_DevMode") target:self set:@selector(setDevMode:specifier:) get:@selector(getDevMode:) detail:nil cell:PSSwitchCell edit:nil];
                     [appJitSpecifier setProperty:@YES forKey:@"enabled"];
                     [appJitSpecifier setProperty:@"DevMode" forKey:@"key"];
@@ -222,6 +258,7 @@
                     [specifiers addObject:devmodeSpecifier];
                 }
             }
+            
             
             if (!envManager.isJailbroken && !envManager.isInstalledThroughTrollStore) {
                 PSSpecifier *removeJailbreakSwitchSpecifier = [PSSpecifier preferenceSpecifierNamed:DOLocalizedString(@"Button_Remove_Jailbreak") target:self set:@selector(setRemoveJailbreakEnabled:specifier:) get:defGetter detail:nil cell:PSSwitchCell edit:nil];
@@ -264,48 +301,43 @@
                     [specifiers addObject:reinstallPackageManagersSpecifier];
                 }
                 if ((envManager.isJailbroken || envManager.isInstalledThroughTrollStore) && envManager.isBootstrapped) {
-                    // PSSpecifier *hideUnhideJailbreakSpecifier = [PSSpecifier emptyGroupSpecifier];
-                    // hideUnhideJailbreakSpecifier.target = self;
-                    // [hideUnhideJailbreakSpecifier setProperty:@"DOButtonCell" forKey:@"headerCellClass"];
-                    // if (envManager.isJailbreakHidden) {
-                    //     [hideUnhideJailbreakSpecifier setProperty:@"Button_Unhide_Jailbreak" forKey:@"title"];
-                    //     [hideUnhideJailbreakSpecifier setProperty:@"eye" forKey:@"image"];
-                    // }
-                    // else {
-                    //     [hideUnhideJailbreakSpecifier setProperty:@"Button_Hide_Jailbreak" forKey:@"title"];
-                    //     [hideUnhideJailbreakSpecifier setProperty:@"eye.slash" forKey:@"image"];
-                    // }
-                    // [hideUnhideJailbreakSpecifier setProperty:@"hideUnhideJailbreakPressed" forKey:@"action"];
-                    // BOOL hideJailbreakButtonShown = (envManager.isJailbroken || (envManager.isInstalledThroughTrollStore && envManager.isBootstrapped && !envManager.isJailbreakHidden));
-                    // if (hideJailbreakButtonShown) {
-                    //     [specifiers addObject:hideUnhideJailbreakSpecifier];
-                    // }
+/*
+                    PSSpecifier *hideUnhideJailbreakSpecifier = [PSSpecifier emptyGroupSpecifier];
+                    hideUnhideJailbreakSpecifier.target = self;
+                    [hideUnhideJailbreakSpecifier setProperty:@"DOButtonCell" forKey:@"headerCellClass"];
+                    if (envManager.isJailbreakHidden) {
+                        [hideUnhideJailbreakSpecifier setProperty:@"Button_Unhide_Jailbreak" forKey:@"title"];
+                        [hideUnhideJailbreakSpecifier setProperty:@"eye" forKey:@"image"];
+                    }
+                    else {
+                        [hideUnhideJailbreakSpecifier setProperty:@"Button_Hide_Jailbreak" forKey:@"title"];
+                        [hideUnhideJailbreakSpecifier setProperty:@"eye.slash" forKey:@"image"];
+                    }
+                    [hideUnhideJailbreakSpecifier setProperty:@"hideUnhideJailbreakPressed" forKey:@"action"];
+                    BOOL hideJailbreakButtonShown = (envManager.isJailbroken || (envManager.isInstalledThroughTrollStore && envManager.isBootstrapped && !envManager.isJailbreakHidden));
+                    if (hideJailbreakButtonShown) {
+                        [specifiers addObject:hideUnhideJailbreakSpecifier];
+                    }
                     
+*/
                     PSSpecifier *removeJailbreakSpecifier = [PSSpecifier emptyGroupSpecifier];
                     removeJailbreakSpecifier.target = self;
                     [removeJailbreakSpecifier setProperty:@"Button_Remove_Jailbreak" forKey:@"title"];
                     [removeJailbreakSpecifier setProperty:@"DOButtonCell" forKey:@"headerCellClass"];
                     [removeJailbreakSpecifier setProperty:@"trash" forKey:@"image"];
                     [removeJailbreakSpecifier setProperty:@"removeJailbreakPressed" forKey:@"action"];
-                    // if (hideJailbreakButtonShown) {
-                    //     if (envManager.isJailbroken) {
-                    //         [removeJailbreakSpecifier setProperty:DOLocalizedString(@"Hint_Hide_Jailbreak_Jailbroken") forKey:@"footerText"];
-                    //     }
-                    //     else {
-                    //         [removeJailbreakSpecifier setProperty:DOLocalizedString(@"Hint_Hide_Jailbreak") forKey:@"footerText"];
-                    //     }
-                    // }
+/*
+                    if (hideJailbreakButtonShown) {
+                        if (envManager.isJailbroken) {
+                            [removeJailbreakSpecifier setProperty:DOLocalizedString(@"Hint_Hide_Jailbreak_Jailbroken") forKey:@"footerText"];
+                        }
+                        else {
+                            [removeJailbreakSpecifier setProperty:DOLocalizedString(@"Hint_Hide_Jailbreak") forKey:@"footerText"];
+                        }
+                    }
+*/
                     [specifiers addObject:removeJailbreakSpecifier];
                 }
-            }
-            if(envManager.isJailbroken || envManager.isInstalledThroughTrollStore){
-                PSSpecifier *rebootDeviceSpecifier = [PSSpecifier emptyGroupSpecifier];
-                rebootDeviceSpecifier.target = self;
-                [rebootDeviceSpecifier setProperty:@"Button_Reboot_Device" forKey:@"title"];
-                [rebootDeviceSpecifier setProperty:@"DOButtonCell" forKey:@"headerCellClass"];
-                [rebootDeviceSpecifier setProperty:@"arrow.clockwise.circle" forKey:@"image"];
-                [rebootDeviceSpecifier setProperty:@"rebootDevicePressed" forKey:@"action"];
-                [specifiers addObject:rebootDeviceSpecifier];
             }
         }
         
@@ -394,7 +426,7 @@
 {
     DOEnvironmentManager *envManager = [DOEnvironmentManager sharedManager];
     if (envManager.isJailbroken) {
-        bool v = jbclient_platform_jbsettings_get_bool("markAppsAsDebugged");
+        bool v = jbclient_jbsettings_get_bool("markAppsAsDebugged");
         return @(v);
     }
     return [self readPreferenceValue:specifier];
@@ -409,30 +441,23 @@
     }
 }
 
-- (id)getDevMode:(PSSpecifier *)specifier
+- (id)readJetsamMultiplier:(PSSpecifier *)specifier
 {
-    return @(jbclient_platform_jbsettings_get_bool("DevMode"));
+    DOEnvironmentManager *envManager = [DOEnvironmentManager sharedManager];
+    if (envManager.isJailbroken) {
+        double v = jbclient_jbsettings_get_double("jetsamMultiplier");
+        return @((v < 1 || isnan(v)) ? 6 : ceil(v * 2));
+    }
+    return [self readPreferenceValue:specifier];
 }
 
-- (void)setDevMode:(id)value specifier:(PSSpecifier *)specifier
+- (void)setJetsamMultiplier:(id)value specifier:(PSSpecifier *)specifier
 {
-    BOOL enable = ((NSNumber *)value).boolValue;
-    
-    if(enable) {
-        jbclient_platform_jbsettings_set_bool("DevMode", YES);
-        return;
+    [self setPreferenceValue:value specifier:specifier];
+    DOEnvironmentManager *envManager = [DOEnvironmentManager sharedManager];
+    if (envManager.isJailbroken) {
+        jbclient_platform_jbsettings_set_double("jetsamMultiplier", ((NSNumber *)value).doubleValue / 2);
     }
-    
-    UIAlertController *confirmationAlertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Alert_Disable_DevMode_Title") message:DOLocalizedString(@"Alert_Disable_DevMode_Body") preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *continueAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Continue") style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
-            jbclient_platform_jbsettings_set_bool("DevMode", NO);
-    }];
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Cancel") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        [self reloadSpecifiers];
-    }];
-    [confirmationAlertController addAction:continueAction];
-    [confirmationAlertController addAction:cancelAction];
-    [self presentViewController:confirmationAlertController animated:YES completion:nil];
 }
 
 - (void)setRemoveJailbreakEnabled:(id)value specifier:(PSSpecifier *)specifier
@@ -495,6 +520,15 @@
     [self presentViewController:changeMobilePasswordAlert animated:YES completion:nil];
 }
 
+/*
+- (void)hideUnhideJailbreakPressed
+{
+    DOEnvironmentManager *envManager = [DOEnvironmentManager sharedManager];
+    [envManager setJailbreakHidden:!envManager.isJailbreakHidden];
+    [self reloadSpecifiers];
+}
+*/
+
 - (void)removeJailbreakPressed
 {
     UIAlertController *confirmationAlertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Alert_Remove_Jailbreak_Title") message:DOLocalizedString(@"Alert_Remove_Jailbreak_Pressed_Body") preferredStyle:UIAlertControllerStyleAlert];
@@ -518,19 +552,6 @@
     [self presentViewController:confirmationAlertController animated:YES completion:nil];
 }
 
-- (void)rebootDevicePressed
-{
-    UIAlertController *confirmationAlertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Alert_Reboot_Device_Title") message:DOLocalizedString(@"Alert_Reboot_Device_Pressed_Body") preferredStyle:UIAlertControllerStyleAlert];
-    UIAlertAction *rebootAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Continue") style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
-        [[DOEnvironmentManager sharedManager] reboot];
-    }];
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Cancel") style:UIAlertActionStyleDefault handler:nil];
-    [confirmationAlertController addAction:rebootAction];
-    [confirmationAlertController addAction:cancelAction];
-    [self presentViewController:confirmationAlertController animated:YES completion:nil];
-}
-
-
 - (void)resetSettingsPressed
 {
     [[DOUIManager sharedInstance] resetSettings];
@@ -538,5 +559,30 @@
     [self reloadSpecifiers];
 }
 
+- (id)getDevMode:(PSSpecifier *)specifier
+{
+    return @(jbclient_jbsettings_get_bool("DevMode"));
+}
+
+- (void)setDevMode:(id)value specifier:(PSSpecifier *)specifier
+{
+    BOOL enable = ((NSNumber *)value).boolValue;
+    
+    if(enable) {
+        jbclient_platform_jbsettings_set_bool("DevMode", YES);
+        return;
+    }
+    
+    UIAlertController *confirmationAlertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Alert_Disable_DevMode_Title") message:DOLocalizedString(@"Alert_Disable_DevMode_Body") preferredStyle:UIAlertControllerStyleAlert];
+    UIAlertAction *continueAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Continue") style:UIAlertActionStyleDestructive handler:^(UIAlertAction * _Nonnull action) {
+            jbclient_platform_jbsettings_set_bool("DevMode", NO);
+    }];
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Cancel") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        [self reloadSpecifiers];
+    }];
+    [confirmationAlertController addAction:continueAction];
+    [confirmationAlertController addAction:cancelAction];
+    [self presentViewController:confirmationAlertController animated:YES completion:nil];
+}
 
 @end

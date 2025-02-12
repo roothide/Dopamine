@@ -4,10 +4,6 @@ CC = clang
 CFLAGS = -I../.include -I./src -isysroot $(shell xcrun --sdk iphoneos --show-sdk-path) -arch arm64e -miphoneos-version-min=15.0 -O2
 LDFLAGS = -dynamiclib
 
-ifeq ($(ENABLE_LOGS), 1)
-CFLAGS += -DENABLE_LOGS
-endif
-
 sign: $(TARGET)
 	@ldid -S $^
 

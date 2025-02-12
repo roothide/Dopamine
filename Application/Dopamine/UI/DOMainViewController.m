@@ -134,8 +134,8 @@
     
     self.jailbreakBtn = [[DOJailbreakButton alloc] initWithAction: [UIAction actionWithTitle:jailbreakButtonTitle image:jailbreakButtonImage identifier:@"jailbreak" handler:^(__kindof UIAction * _Nonnull action) {
         
-        if([DOEnvironmentManager.sharedManager isRootlessDopamineJailbroken]) {
-            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Error") message:DOLocalizedString(@"rootless dopamine jailbroken at present, please reboot the device.") preferredStyle:UIAlertControllerStyleAlert];
+        if([DOEnvironmentManager.sharedManager isOtherJailbreakActived]) {
+            UIAlertController *alertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Error") message:DOLocalizedString(@"Your device currently has another jailbreak activated, please reboot device.") preferredStyle:UIAlertControllerStyleAlert];
             UIAlertAction *rebootAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Close") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
                 //exit(0);
             }];
@@ -242,7 +242,7 @@
                 // Used when there is an error that is explainable in such detail that additional logs are not needed
                 UIAlertController *alertController = [UIAlertController alertControllerWithTitle:DOLocalizedString(@"Log_Error") message:[error localizedDescription] preferredStyle:UIAlertControllerStyleAlert];
                 UIAlertAction *rebootAction = [UIAlertAction actionWithTitle:DOLocalizedString(@"Button_Reboot") style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-                    exec_cmd_trusted(JBRootPath("/sbin/reboot"), NULL);
+                    exec_cmd_trusted(JBROOT_PATH("/sbin/reboot"), NULL);
                 }];
                 [alertController addAction:rebootAction];
                 [self presentViewController:alertController animated:YES completion:nil];

@@ -18,9 +18,11 @@ int main(int argc, char * argv[]) {
             if (!strcmp(argv[2], "delete-bootstrap")) {
                 [[DOEnvironmentManager sharedManager] deleteBootstrap];
             }
-            else if (!strcmp(argv[2], "reboot")) {
-                [[DOEnvironmentManager sharedManager] doReboot];
+/*
+            else if (!strcmp(argv[2], "hide-jailbreak")) {
+                [[DOEnvironmentManager sharedManager] setJailbreakHidden:YES];
             }
+*/
             return 0;
         }
     }

@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <mach-o/dyld.h>
 extern CFStringRef CFCopySystemVersionString(void);
 
 #define RB_QUICK	0x400
@@ -131,15 +132,18 @@ const char *crashreporter_string_for_code(int code)
 void crashreporter_dump_backtrace_line(FILE *f, vm_address_t addr)
 {
 	Dl_info info;
-	dladdr((void *)addr, &info);
+	if (dladdr((void *)addr, &info) != 0) {
+		const char *sname = info.dli_sname;
+		const char *fname = info.dli_fname;
+		if (!sname) {
+			sname = "<unexported>";
+		}
 
-	const char *sname = info.dli_sname;
-	const char *fname = info.dli_fname;
-	if (!sname) {
-		sname = "<unexported>";
+		fprintf(f, "0x%lX: %s (0x%lX + 0x%lX) (%s(0x%lX) + 0x%lX)\n", addr, sname, (vm_address_t)info.dli_saddr, addr - (vm_address_t)info.dli_saddr, fname, (vm_address_t)info.dli_fbase, addr - (vm_address_t)info.dli_fbase);
 	}
-
-	fprintf(f, "0x%lX: %s (0x%lX + 0x%lX) (%s(0x%lX) + 0x%lX)\n", addr, sname, (vm_address_t)info.dli_saddr, addr - (vm_address_t)info.dli_saddr, fname, (vm_address_t)info.dli_fbase, addr - (vm_address_t)info.dli_fbase);
+	else {
+		fprintf(f, "0x%lX (no association)\n", addr);
+	}
 }
 
 FILE *crashreporter_open_outfile(const char *source, char **nameOut)
@@ -244,6 +248,14 @@ void crashreporter_dump_mach(FILE *f, int code, int subcode, arm_thread_state64_
 	fprintf(f, "\n");
 }
 
+void crashreporter_dump_image_list(FILE *f)
+{
+	fprintf(f, "Images:\n");
+	for (uint32_t i = 0; i < _dyld_image_count(); i++) {
+		fprintf(f, "%s: %p\n", _dyld_get_image_name(i), _dyld_get_image_header(i));
+	}
+}
+
 void crashreporter_catch_mach(exception_raise_request *request, exception_raise_reply *reply)
 {
 	pthread_t pthread = pthread_from_mach_thread_np(request->thread.name);
@@ -268,6 +280,7 @@ void crashreporter_catch_mach(exception_raise_request *request, exception_raise_
 	FILE *f = crashreporter_open_outfile("launchd", &name);
 	if (f) {
 		crashreporter_dump_mach(f, request->code, request->subcode, threadState, exceptionState, bt);
+		crashreporter_dump_image_list(f);
 		crashreporter_save_outfile(f);
 	}
 
@@ -322,6 +335,7 @@ void crashreporter_catch_objc(NSException *e)
 		if (f) {
 			@try {
 				crashreporter_dump_objc(f, e);
+				crashreporter_dump_image_list(f);
 			}
 			@catch (NSException *e2) {
 				exit(187);
@@ -339,6 +353,28 @@ void crashreporter_catch_objc(NSException *e)
 	}
 }
 
+/*
+void *crashreporter_listen(void *arg)
+{
+	while (true) {
+		mach_msg_header_t msg;
+		msg.msgh_local_port = gExceptionPort;
+		msg.msgh_size = 1024;
+		mach_msg_receive(&msg);
+
+		exception_raise_reply reply;
+		crashreporter_catch_mach((exception_raise_request *)&msg, &reply);
+
+		reply.header.msgh_bits = MACH_MSGH_BITS(MACH_MSGH_BITS_REMOTE(msg.msgh_bits), 0);
+		reply.header.msgh_size = sizeof(exception_raise_reply);
+		reply.header.msgh_remote_port = msg.msgh_remote_port;
+		reply.header.msgh_local_port = MACH_PORT_NULL;
+		reply.header.msgh_id = msg.msgh_id + 0x64;
+
+		mach_msg(&reply.header, MACH_SEND_MSG | MACH_MSG_OPTION_NONE, reply.header.msgh_size, 0, MACH_PORT_NULL, MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
+	}
+}
+*/
 void *crashreporter_listen(void *arg)
 {
     int bufsize = 4096;
@@ -378,7 +414,7 @@ void *crashreporter_listen(void *arg)
 void crashreporter_pause(void)
 {
 	if (gCrashReporterState == kCrashReporterStateActive) {
-		task_set_exception_ports(mach_task_self_, EXC_MASK_CRASH_RELATED, 0, EXCEPTION_DEFAULT, ARM_THREAD_STATE64);
+		task_set_exception_ports(mach_task_self_, EXC_MASK_CRASH_RELATED, MACH_PORT_NULL, 0, 0);
 		NSSetUncaughtExceptionHandler(defaultNSExceptionHandler);
 		defaultNSExceptionHandler = nil;
 		gCrashReporterState = kCrashReporterStatePaused;
@@ -469,6 +505,13 @@ int sigcatch[] = {
 
 void crashreporter_start(void)
 {
+	for(int i=0; i<sizeof(sigcatch)/sizeof(sigcatch[0]); i++) {
+		struct sigaction act = {0};
+		act.sa_flags = SA_SIGINFO|SA_RESETHAND;
+		act.sa_sigaction = signal_handler;
+		sigaction(sigcatch[i], &act, NULL);
+	}
+
 	if (gCrashReporterState == kCrashReporterStateNotActive) {
 		mach_port_allocate(mach_task_self_, MACH_PORT_RIGHT_RECEIVE, &gExceptionPort);
 		mach_port_insert_right(mach_task_self_, gExceptionPort, gExceptionPort, MACH_MSG_TYPE_MAKE_SEND);
@@ -476,11 +519,5 @@ void crashreporter_start(void)
 		gCrashReporterState = kCrashReporterStatePaused;
 		crashreporter_resume();
 	}
-
-    for(int i=0; i<sizeof(sigcatch)/sizeof(sigcatch[0]); i++) {
-        struct sigaction act = {0};
-        act.sa_flags = SA_SIGINFO|SA_RESETHAND;
-        act.sa_sigaction = signal_handler;
-        sigaction(sigcatch[i], &act, NULL);
-    }
 }
+

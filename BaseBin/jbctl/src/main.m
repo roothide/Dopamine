@@ -99,6 +99,19 @@ int main(int argc, char* argv[])
 				print_usage();
 				return 2;
 			}
+/*
+			const char *cdhashString = argv[3];
+			if (strlen(cdhashString) != (sizeof(cdhash_t) * 2)) {
+				printf("ERROR: passed cdhash has wrong length\n");
+				return 2;
+			}
+			cdhash_t cdhash;
+			if (convert_hex_string_to_data(cdhashString, &cdhash)) {
+				printf("ERROR: passed cdhash is malformed\n");
+				return 2;
+			}
+			return jbclient_root_trustcache_add_cdhash(cdhash, sizeof(cdhash));
+*/
 			const char *filepath = argv[3];
 			if (access(filepath, F_OK) != 0) {
 				printf("ERROR: passed macho path does not exist\n");

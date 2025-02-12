@@ -4,7 +4,6 @@
 #include "translation.h"
 #include "kernel.h"
 #include "util.h"
-#include "log.h"
 
 Fugu14KcallThread gFugu14KcallThread;
 
@@ -30,24 +29,6 @@ uint64_t mapKernelPage(uint64_t addr)
 	return -1;
 }
 
-uint64_t GetThreadID(thread_t port) {
-
-    thread_identifier_info_data_t info;
-    mach_msg_type_number_t info_count=THREAD_IDENTIFIER_INFO_COUNT;
-    kern_return_t kr=thread_info(port,
-                                 THREAD_IDENTIFIER_INFO,
-                                 (thread_info_t)&info,
-                                 &info_count);
-    if(kr!=KERN_SUCCESS) {
-        /* you can get a description of the error by calling
-         * mach_error_string(kr)
-         */
-        return 0;
-    } else {
-        return info.thread_id;
-    }
-}
-
 uint64_t getUserReturnThreadContext(void)
 {
 	if (gUserReturnThreadContext != 0) {
@@ -68,8 +49,6 @@ uint64_t getUserReturnThreadContext(void)
 		puts("[-] getUserReturnThreadContext: Failed to create return thread!");
 		return 0;
 	}
-	
-	JBLogDebug("returnThread tid=%d", GetThreadID(chThread));
 	
 	thread_suspend(chThread);
 	
@@ -103,8 +82,6 @@ int fugu14_kcall_init(int (^threadSigner)(mach_port_t threadPort))
 		puts("[-] fugu14_kcall_init: thread_create failed!");
 		return -1;
 	}
-	
-	JBLogDebug("fugu14_kcall_init thread tid=%d", GetThreadID(thread));
 	
 	// Find the thread
 	uint64_t threadPtr = task_get_ipc_port_kobject(task_self(), thread);

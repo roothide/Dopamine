@@ -2,7 +2,6 @@
 #import <libjailbreak/libjailbreak.h>
 #import <libjailbreak/util.h>
 #import <libjailbreak/kernel.h>
-#import <libjailbreak/codesign.h>
 #import <mach-o/dyld.h>
 #import <spawn.h>
 #import <substrate.h>
@@ -16,14 +15,20 @@
 #import "crashreporter.h"
 #import "boomerang.h"
 #import "update.h"
-#import "exec_patch.h"
+
+#import <libjailbreak/codesign.h>
 #include "../systemhook/src/common.h"
+#import "exec_patch.h"
 
 char HOOK_DYLIB_PATH[PATH_MAX] = {0};
 
 bool gInEarlyBoot = true;
+bool gFirstLoad = false;
 
-void abort_with_reason(uint32_t reason_namespace, uint64_t reason_code, const char *reason_string, uint64_t reason_flags);
+#define RB_QUICK	0x400
+#define RB_PANIC	0x800
+int reboot_np(int howto, const char *message);
+#define abort_with_reason(reason_namespace,reason_code,reason_string,reason_flags)  reboot_np(RB_PANIC|RB_QUICK, reason_string)
 
 /*struct dyld_cache_header
 {
@@ -155,6 +160,7 @@ __attribute__((constructor)) static void initializer(void)
 		// Here we should have been injected into a live launchd on the fly
 		// In this case, we are not in early boot...
 		gInEarlyBoot = false;
+		gFirstLoad = true;
 		firstLoad = true;
 	}
 
@@ -174,7 +180,7 @@ __attribute__((constructor)) static void initializer(void)
 
 	if(!firstLoad)
 	{
-		NSString* systemhookFilePath = [NSString stringWithFormat:@"%@/systemhook-%016llX.dylib", NSJBRootPath(@"/basebin"), jbinfo(jbrand)];
+		NSString* systemhookFilePath = [NSString stringWithFormat:@"%@/systemhook-%016llX.dylib", JBROOT_PATH(@"/basebin"), jbinfo(jbrand)];
 		
 		int unsandbox(const char* dir, const char* file);
 		unsandbox("/usr/lib", systemhookFilePath.fileSystemRepresentation);
@@ -183,7 +189,8 @@ __attribute__((constructor)) static void initializer(void)
 		snprintf(HOOK_DYLIB_PATH, sizeof(HOOK_DYLIB_PATH), "/usr/lib/systemhook-%016llX.dylib", jbinfo(jbrand));
 	}
 
-    proc_csflags_set(proc_self(), CS_GET_TASK_ALLOW);
+	proc_csflags_set(proc_self(), CS_GET_TASK_ALLOW);
+
 	cs_allow_invalid(proc_self(), false);
 
 	initXPCHooks();
@@ -192,16 +199,17 @@ __attribute__((constructor)) static void initializer(void)
 	initIPCHooks();
 	initDSCHooks();
 	initJetsamHook();
-    initSpawnExecPatch();
+	
+	initSpawnExecPatch();
 
 	void* __sysctl_orig = NULL;
 	void* __sysctlbyname_orig = NULL;
-    MSHookFunction(&__sysctl, (void *) __sysctl_hook, &__sysctl_orig);
-    MSHookFunction(&__sysctlbyname, (void *) __sysctlbyname_hook, &__sysctlbyname_orig);
+	MSHookFunction(&__sysctl, (void *) __sysctl_hook, &__sysctl_orig);
+	MSHookFunction(&__sysctlbyname, (void *) __sysctlbyname_hook, &__sysctlbyname_orig);
 
 	// This will ensure launchdhook is always reinjected after userspace reboots
 	// As this launchd will pass environ to the next launchd...
-	setenv("DYLD_INSERT_LIBRARIES", JBRootPath("/basebin/launchdhook.dylib"), 1);
+	setenv("DYLD_INSERT_LIBRARIES", JBROOT_PATH("/basebin/launchdhook.dylib"), 1);
 
 	// Mark Dopamine as having been initialized before
 	setenv("DOPAMINE_INITIALIZED", "1", 1);

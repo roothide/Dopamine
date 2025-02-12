@@ -45,8 +45,6 @@ NSString *getAppIdentifierFromPath(const char *path) {
     NSString *identifier = appInfo[@"CFBundleIdentifier"];
     if (!identifier) return nil;
 
-    JBLogDebug("spawn app [%s] %s", identifier.UTF8String, path);
-
     return identifier;
 }
 
@@ -54,7 +52,7 @@ BOOL isBlacklistedApp(NSString* identifier)
 {
     if(!identifier) return NO;
 
-    NSString* configFilePath = NSJBRootPath(@"/var/mobile/Library/RootHide/RootHideConfig.plist");
+    NSString* configFilePath = JBROOT_PATH(@"/var/mobile/Library/RootHide/RootHideConfig.plist");
     NSDictionary* roothideConfig = [NSDictionary dictionaryWithContentsOfFile:configFilePath];
     if(!roothideConfig) return NO;
 

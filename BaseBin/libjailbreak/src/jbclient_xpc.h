@@ -17,18 +17,16 @@ int jbclient_trust_library(const char *libraryPath, void *addressInCaller);
 int jbclient_process_checkin(char **rootPathOut, char **bootUUIDOut, char **sandboxExtensionsOut, bool *fullyDebuggedOut);
 int jbclient_fork_fix(uint64_t childPid);
 int jbclient_cs_revalidate(void);
-int jbclient_cs_drop_get_task_allow(void);
-int jbclient_patch_spawn(int pid, bool resume);
-int jbclient_patch_exec_add(const char* exec_path, bool resume);
-int jbclient_patch_exec_del(const char* exec_path);
+int jbclient_jbsettings_get(const char *key, xpc_object_t *valueOut);
+bool jbclient_jbsettings_get_bool(const char *key);
+uint64_t jbclient_jbsettings_get_uint64(const char *key);
+double jbclient_jbsettings_get_double(const char *key);
 int jbclient_platform_set_process_debugged(uint64_t pid, bool fullyDebugged);
 int jbclient_platform_stage_jailbreak_update(const char *updateTar);
-int jbclient_platform_jbsettings_get(const char *key, xpc_object_t *valueOut);
-bool jbclient_platform_jbsettings_get_bool(const char *key);
-uint64_t jbclient_platform_jbsettings_get_uint64(const char *key);
 int jbclient_platform_jbsettings_set(const char *key, xpc_object_t value);
 int jbclient_platform_jbsettings_set_bool(const char *key, bool boolValue);
 int jbclient_platform_jbsettings_set_uint64(const char *key, uint64_t uint64Value);
+int jbclient_platform_jbsettings_set_double(const char *key, double doubleValue);
 int jbclient_watchdog_intercept_userspace_panic(const char *panicMessage);
 int jbclient_watchdog_get_last_userspace_panic(char **panicMessage);
 int jbclient_root_get_physrw(bool singlePTE, uint64_t *singlePTEAsidPtr);
@@ -40,5 +38,10 @@ int jbclient_root_trustcache_info(xpc_object_t *infoOut);
 int jbclient_root_trustcache_add_cdhash(uint8_t *cdhashData, size_t cdhashLen);
 int jbclient_root_trustcache_clear(void);
 int jbclient_boomerang_done(void);
+
+int jbclient_cs_drop_get_task_allow(void);
+int jbclient_patch_spawn(int pid, bool resume);
+int jbclient_patch_exec_add(const char* exec_path, bool resume);
+int jbclient_patch_exec_del(const char* exec_path);
 
 #endif

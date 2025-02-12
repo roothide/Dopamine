@@ -1,21 +1,13 @@
 #import <Foundation/Foundation.h>
 #import <substrate.h>
-#include <roothide.h>
-
 
 BOOL preferencePlistNeedsRedirection(NSString *plistPath)
 {
-	if ( [plistPath hasPrefix:@"/var/db/"]
-	  || [plistPath hasPrefix:@"/private/var/preferences/"]
-	  || [plistPath hasPrefix:@"/private/var/mobile/Containers/"] ) 
-	  return NO;
+	if ([plistPath hasPrefix:@"/private/var/mobile/Containers"] || [plistPath hasPrefix:@"/var/db"] || [plistPath hasPrefix:@"/var/jb"]) return NO;
 
 	NSString *plistName = plistPath.lastPathComponent;
 
-	if ([plistName hasPrefix:@"com.apple."]
-	  || [plistName hasPrefix:@"group.com.apple."]
-	 || [plistName hasPrefix:@"systemgroup.com.apple."])
-	  return NO;
+	if ([plistName hasPrefix:@"com.apple."] || [plistName hasPrefix:@"systemgroup.com.apple."] || [plistName hasPrefix:@"group.com.apple."]) return NO;
 
 	NSArray *additionalSystemPlistNames = @[
 		@".GlobalPreferences.plist",
@@ -45,25 +37,18 @@ BOOL preferencePlistNeedsRedirection(NSString *plistPath)
 	return ![additionalSystemPlistNames containsObject:plistName];
 }
 
-BOOL (*orig_CFPrefsGetPathForTriplet)(CFStringRef, CFStringRef, BOOL, CFStringRef, UInt8*);
-BOOL new_CFPrefsGetPathForTriplet(CFStringRef bundleIdentifier, CFStringRef user, BOOL byHost, CFStringRef path, UInt8 *buffer)
+%hookf(BOOL, _CFPrefsGetPathForTriplet, CFStringRef bundleIdentifier, CFStringRef user, BOOL byHost, CFStringRef path, UInt8 *buffer)
 {
-	BOOL orig = orig_CFPrefsGetPathForTriplet(bundleIdentifier, user, byHost, path, buffer);
+	BOOL orig = %orig(bundleIdentifier, user, byHost, path, buffer);
 
-	NSLog(@"CFPrefsGetPathForTriplet %@ %@ %d %@ : %d %s", bundleIdentifier, user, byHost, path, orig, orig?(char*)buffer:"");
-
-	if(orig && buffer)
+	if(orig && buffer && !access("/var/jb", F_OK))
 	{
 		NSString* origPath = [NSString stringWithUTF8String:(char*)buffer];
 		BOOL needsRedirection = preferencePlistNeedsRedirection(origPath);
 		if (needsRedirection) {
-			NSLog(@"Plist redirected to jbroot: %@", origPath);
-			const char* newpath = jbroot(origPath.UTF8String);
-			//buffer size=1024 in CFXPreferences_fileProtectionClassForIdentifier_user_host_container___block_invoke
-			if(strlen(newpath) < 1024) {
-				strcpy((char*)buffer, newpath);
-				NSLog(@"CFPrefsGetPathForTriplet redirect to %s", buffer);
-			}
+			//NSLog(@"Plist redirected to /var/jb: %@", origPath);
+			strcpy((char*)buffer, "/var/jb");
+			strcat((char*)buffer, origPath.UTF8String);
 		}
 	}
 
@@ -72,15 +57,8 @@ BOOL new_CFPrefsGetPathForTriplet(CFStringRef bundleIdentifier, CFStringRef user
 
 void cfprefsdInit(void)
 {
-	NSLog(@"cfprefsdInit..");
-
 	MSImageRef coreFoundationImage = MSGetImageByName("/System/Library/Frameworks/CoreFoundation.framework/CoreFoundation");
-	void* CFPrefsGetPathForTriplet_ptr = MSFindSymbol(coreFoundationImage, "__CFPrefsGetPathForTriplet");
-	if(CFPrefsGetPathForTriplet_ptr)
-	{
-		MSHookFunction(CFPrefsGetPathForTriplet_ptr, (void *)&new_CFPrefsGetPathForTriplet, (void **)&orig_CFPrefsGetPathForTriplet);
-		NSLog(@"hook __CFPrefsGetPathForTriplet %p => %p : %p", CFPrefsGetPathForTriplet_ptr, new_CFPrefsGetPathForTriplet, orig_CFPrefsGetPathForTriplet);
+	if (coreFoundationImage) {
+		%init(_CFPrefsGetPathForTriplet = MSFindSymbol(coreFoundationImage, "__CFPrefsGetPathForTriplet"));
 	}
-
-	%init();
 }
