@@ -393,7 +393,7 @@ int __sysctl_hook(int *name, u_int namelen, void *oldp, size_t *oldlenp, const v
 	});
 
 	if(name && namelen && cached_namelen &&
-	 namelen==cached_namelen && memcmp(cached_name, name, namelen)==0) {
+	 namelen==cached_namelen && memcmp(cached_name, name, namelen*sizeof(int))==0) {
 		if(oldp && oldlenp && *oldlenp>=sizeof(int)) {
 			*(int*)oldp = 1;
 			*oldlenp = sizeof(int);
