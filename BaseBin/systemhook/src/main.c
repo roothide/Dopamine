@@ -566,7 +566,7 @@ __attribute__((constructor)) static void initializer(void)
 //////////////////////////////////////////////
 	struct dl_info di={0};
 	dladdr((void*)initializer, &di);
-	strncpy(HOOK_DYLIB_PATH, di.dli_fname, sizeof(HOOK_DYLIB_PATH));
+	strlcpy(HOOK_DYLIB_PATH, di.dli_fname, sizeof(HOOK_DYLIB_PATH));
 /////////////////////////////////////////////////////////////////////////
 
 	// Tell jbserver (in launchd) that this process exists
