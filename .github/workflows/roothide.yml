@@ -1,8 +1,8 @@
 name: "*** build tipa file ***"
 
 on:
-  schedule:
-    - cron: '0 */2 * * *' # every 2 hours
+  #schedule:
+  #  - cron: '0 0 * */1 *' # every 2 hours
   workflow_dispatch:
 
 concurrency:
@@ -16,7 +16,7 @@ jobs:
       - name: Checkout
         run: |
           set -x
-          git clone --recursive https://github.com/roothide/Dopamine2-roothide ${{ github.workspace }}
+          git clone --recursive https://github.com/huutanphp/Dopamine2-roothide ${{ github.workspace }}
           
       - name: Install Procursus
         uses: dhinakg/procursus-action@main
@@ -73,6 +73,31 @@ jobs:
           mv ./Application/Dopamine.tipa  "./Application/roothide-Dopamine2-v${TAG}.tipa"
           echo "tag=${TAG}" >> $GITHUB_ENV
 
+      - name: version
+        run: echo "::set-output name=version::roothide-Dopamine2-v${{ env.tag }}"
+        id: version
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: "16"
+          #body_path: CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: upload Roothide
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: |
+            ${{ github.workspace }}/Application/roothide-Dopamine2-v${{ env.tag }}.tipa
+          asset_name: roothide-Dopamine2-v${{ env.tag }}.tipa
+          asset_content_type: application/octet-stream
       - name: Upload Artifact
         id: dopamine-latest-upload
         uses: actions/upload-artifact@v4
